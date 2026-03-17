@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* 1. Tùy chỉnh Layout tổng thể của AG Grid */
+.ag-theme-quartz {
+  --ag-header-height: 32px;
+  --ag-header-column-separator-display: block;
+  --ag-header-column-separator-color: #e5e7eb;
+  --ag-font-size: 13px;
+  --ag-row-hover-color: rgba(79, 70, 229, 0.05);
+  --ag-selected-row-color: rgba(79, 70, 229, 0.1);
+}
+
+/* 2. Thanh phân trang (Paging Panel) */
+.ag-theme-quartz .ag-paging-panel {
+  justify-content: flex-end;
+  padding-right: 20px;
+  z-index: 10;
+  position: relative;
+}
+
+/* 3. Ô số trang hiện tại - Thiết kế gọn gàng nhất */
+.ag-theme-quartz .ag-paging-number {
+  /* display: inline-flex !important; */
+  align-items: center;
+  justify-content: center;
+  /* min-width: 30px; */
+  height: 25px;
+  background-color: white !important;
+  border: 1px solid #6366f1 !important; /* Màu Indigo */
+  border-radius: 4px;
+  margin: 0 4px;
+  font-weight: bold;
+  color: #1e293b;
+  cursor: text !important;
+  pointer-events: auto !important;
+  transition: all 0.2s;
+}
+
+.ag-theme-quartz .ag-paging-number:hover {
+  background-color: #f5f3ff !important;
+  border-color: #4338ca !important;
+}
+
+/* 4. Tối ưu hóa Icons trong hàng */
+.ag-row .text-gray-400 {
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+.ag-row-hover .text-gray-400 {
+  opacity: 1;
+}
