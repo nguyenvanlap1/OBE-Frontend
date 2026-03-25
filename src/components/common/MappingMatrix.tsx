@@ -1,22 +1,27 @@
 interface MatrixItem {
-  id: number;
-  code: string;
+  id: string | number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 interface MappingItem {
-  rowId: number; // Thay cho cloId
-  colId: number; // Thay cho coId
+  rowId: string; // Đồng bộ kiểu String
+  colId: string; // Đồng bộ kiểu String
   weight: number;
 }
 
 interface MappingMatrixProps {
   title: string;
-  rows: MatrixItem[]; // Danh sách hàng dọc (ví dụ: CLOs)
-  cols: MatrixItem[]; // Danh sách hàng ngang (ví dụ: COs)
-  mappings: MappingItem[]; // Dữ liệu giao thoa
+  rows: MatrixItem[];
+  cols: MatrixItem[];
+  mappings: MappingItem[];
   isEditing: boolean;
   onMappingChange: (updatedMappings: MappingItem[]) => void;
-  labels: { row: string; col: string }; // Nhãn hiển thị góc bảng (ví dụ: {row: "CLO", col: "CO"})
+  labels: { row: string; col: string };
+  rowKey?: keyof MatrixItem;
+  colKey?: keyof MatrixItem;
+  rowLabelKey?: string;
+  colLabelKey?: string;
 }
 
 const MappingMatrix = ({
@@ -27,85 +32,113 @@ const MappingMatrix = ({
   isEditing,
   onMappingChange,
   labels,
+  rowKey = "id",
+  colKey = "id",
+  rowLabelKey = "code",
+  colLabelKey = "code",
 }: MappingMatrixProps) => {
-  // Lấy trọng số tại ô giao nhau
-  const getWeight = (rowId: number, colId: number) => {
+  // Lấy trọng số: So sánh sau khi đã chuyển về String để tránh lệch kiểu data
+  const getWeight = (rowVal: string, colVal: string) => {
     const mapping = mappings.find(
-      (m) => m.rowId === rowId && m.colId === colId,
+      (m) => String(m.rowId) === rowVal && String(m.colId) === colVal,
     );
-    return mapping ? mapping.weight : "";
+    return mapping ? mapping.weight.toString() : "";
   };
 
   // Cập nhật trọng số
-  const handleWeightChange = (rowId: number, colId: number, value: string) => {
+  // Trong file MappingMatrix.tsx
+  const handleWeightChange = (
+    rowVal: string,
+    colVal: string,
+    value: string,
+  ) => {
     const newWeight = value === "" ? 0 : Number(value);
-    const existingIndex = mappings.findIndex(
-      (m) => m.rowId === rowId && m.colId === colId,
+
+    // 1. Chuyển tất cả về String để so sánh chính xác tuyệt đối
+    const updatedMappings = mappings.filter(
+      (m) =>
+        !(
+          String(m.rowId) === String(rowVal) &&
+          String(m.colId) === String(colVal)
+        ),
     );
 
-    const updatedMappings = [...mappings];
-    if (existingIndex > -1) {
-      updatedMappings[existingIndex] = {
-        ...updatedMappings[existingIndex],
+    // 2. Chỉ push cái mới nhất vào (Nếu weight > 0)
+    if (newWeight !== 0) {
+      updatedMappings.push({
+        rowId: String(rowVal),
+        colId: String(colVal),
         weight: newWeight,
-      };
-    } else {
-      updatedMappings.push({ rowId, colId, weight: newWeight });
+      });
     }
+
     onMappingChange(updatedMappings);
   };
 
   return (
     <section className="mt-8">
-      <h3 className="font-bold mb-4 uppercase tracking-tight">{title}</h3>
-      <table className="border-collapse border border-black text-sm">
-        <thead>
-          <tr className="bg-slate-100">
-            {/* Góc bảng hiển thị nhãn linh hoạt */}
-            <th className="border border-black p-2 w-28 text-center font-bold">
-              {labels.row} \ {labels.col}
-            </th>
-            {cols.map((col) => (
-              <th
-                key={col.id}
-                className="border border-black p-2 w-16 text-center font-bold"
-              >
-                {col.code}
+      <h3 className="font-bold mb-4 uppercase tracking-tight text-gray-800">
+        {title}
+      </h3>
+      <div className="overflow-x-auto">
+        <table className="border-collapse border border-black text-sm w-full max-w-fit">
+          <thead>
+            <tr className="bg-slate-100">
+              <th className="border border-black p-2 min-w-[120px] text-center font-bold">
+                {labels.row} \ {labels.col}
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              <td className="border border-black p-2 text-center font-bold bg-slate-50">
-                {row.code}
-              </td>
               {cols.map((col) => (
-                <td
-                  key={`${row.id}-${col.id}`}
-                  className="border border-black p-1 text-center"
+                <th
+                  key={String(col[colKey])}
+                  className="border border-black p-2 w-16 text-center font-bold"
                 >
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      className="w-full text-center bg-yellow-50 outline-none"
-                      value={getWeight(row.id, col.id)}
-                      onChange={(e) =>
-                        handleWeightChange(row.id, col.id, e.target.value)
-                      }
-                    />
-                  ) : (
-                    <span className="font-medium text-blue-700">
-                      {getWeight(row.id, col.id) || "-"}
-                    </span>
-                  )}
-                </td>
+                  {/* Sử dụng colLabelKey nếu có, không thì fallback về 'code' hoặc 'id' */}
+                  {col[colLabelKey || "code"] || col.id}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const rVal = String(row[rowKey]);
+
+              return (
+                <tr key={rVal}>
+                  <td className="border border-black p-2 text-center font-bold bg-slate-50">
+                    {row[rowLabelKey || "code"] || row.id}
+                  </td>
+                  {cols.map((col) => {
+                    const cVal = String(col[colKey]);
+                    const weightValue = getWeight(rVal, cVal);
+
+                    return (
+                      <td
+                        key={`${rVal}-${cVal}`}
+                        className="border border-black p-1 text-center"
+                      >
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            className="w-full text-center bg-yellow-50 outline-none focus:bg-yellow-100 p-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={weightValue}
+                            onChange={(e) =>
+                              handleWeightChange(rVal, cVal, e.target.value)
+                            }
+                          />
+                        ) : (
+                          <span className="font-medium text-blue-700">
+                            {weightValue || "-"}
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 };

@@ -1,45 +1,45 @@
 import { useMemo } from "react";
 import type { ColDef } from "ag-grid-community";
 
-import courseService, {
-  type CourseFilterRequest,
-  type CourseUpdateRequest,
-  type CourseResponse,
-  type CourseResponseDetail,
-} from "../../services/courseService";
-import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
+import courseVersionService, {
+  type CourseVersionResponse,
+  type CourseVersionResponseDetail,
+} from "../../services/courseVersionService";
+// Import component Grid mới dành riêng cho CourseVersion
 import logData from "../../utils/logData";
-interface CourseListProps {
+import { CourseVersionGrid } from "./CourseVersionGrid";
+
+interface CourseVersionListProps {
   onViewDetail?: (
     idTabset: string,
     nameTab: string,
-    // Ép kiểu data phải là CourseResponseDetail VÀ phải có thêm trường id: string
-    data: CourseResponseDetail & { id: string },
+    data: CourseVersionResponseDetail & { id: string },
   ) => void;
-  onCreate?: () => Promise<void>;
+  onCreate?: () => void;
 }
 
-const CourseList = ({ onViewDetail, onCreate }: CourseListProps) => {
-  const columnDefs = useMemo<ColDef<CourseResponse>[]>(
+const CourseVersionList = ({
+  onViewDetail,
+  onCreate,
+}: CourseVersionListProps) => {
+  // 1. Định nghĩa cột hiển thị
+  const columnDefs = useMemo<ColDef<CourseVersionResponse>[]>(
     () => [
       {
-        field: "id",
+        field: "courseId",
         headerName: "Mã Học Phần",
-        filter: "agTextColumnFilter",
         width: 150,
+        pinned: "left",
       },
       {
-        field: "name",
-        headerName: "Tên Học Phần (Hiện hành)",
-        editable: true,
-        filter: "agTextColumnFilter",
-        cellClass: "bg-blue-50/20 font-medium",
+        field: "courseName",
+        headerName: "Tên Học Phần",
+        cellClass: "font-medium",
         flex: 1,
       },
       {
         field: "credits",
         headerName: "Tín chỉ",
-        editable: true,
         width: 100,
         filter: "agNumberColumnFilter",
       },
@@ -48,7 +48,9 @@ const CourseList = ({ onViewDetail, onCreate }: CourseListProps) => {
         headerName: "Phiên bản",
         width: 120,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        cellRenderer: (params: any) => `v${params.value}`,
+        cellRenderer: (params: any) =>
+          params.value ? `v${params.value}` : "-",
+        cellClass: "text-blue-600 font-semibold",
       },
       {
         field: "fromDate",
@@ -59,44 +61,45 @@ const CourseList = ({ onViewDetail, onCreate }: CourseListProps) => {
       {
         field: "subDepartmentId",
         headerName: "Mã Bộ môn",
-        filter: "agTextColumnFilter",
+        width: 130,
+      },
+      {
+        field: "departmentName",
+        headerName: "Khoa quản lý",
+        flex: 0.8,
       },
     ],
     [],
   );
 
   return (
-    <InfiniteGrid<CourseResponse, CourseUpdateRequest, CourseFilterRequest>
-      title="Quản lý Học phần"
-      description="Danh sách học phần và các phiên bản OBE hiện hành"
+    <CourseVersionGrid
+      title="Quản lý Phiên bản Học phần"
+      description="Danh sách các phiên bản OBE. Nhấn 'Xem chi tiết' để cập nhật nội dung."
       columnDefs={columnDefs}
-      fetchData={courseService.search}
-      onUpdate={(data) =>
-        // Lưu ý: data ở đây là CourseResponse từ Grid, cần map sang CourseUpdateRequest nếu cần
-        courseService
-          .update({
-            ...data,
-            isNewVersion: false, // Mặc định update trên version hiện tại
-          } as CourseUpdateRequest)
-          .then((res) => res.data)
-      }
-      onDelete={(id) => courseService.deleteFullCourse(id)}
+      fetchData={courseVersionService.search}
+      // 2. Logic Xóa: Khớp với signature (courseId, versionNumber) của CourseVersionGrid
+      onDelete={(courseId, versionNumber) => {
+        return courseVersionService.delete(courseId, versionNumber);
+      }}
+      // 3. Logic Xem chi tiết: Lấy dữ liệu đầy đủ từ Service
       onViewDetail={(dataFromGrid) => {
-        // 1. Gọi API lấy chi tiết dựa trên id và versionNumber từ dòng vừa click
-        courseService
-          .getDetail(dataFromGrid.id, dataFromGrid.versionNumber)
+        courseVersionService
+          .getDetail(dataFromGrid.courseId, dataFromGrid.versionNumber)
           .then((res) => {
             logData(res);
 
-            // 2. Chuẩn bị dữ liệu đầy đủ
             const enrichedData = {
               ...res.data,
-              id: `${res.data.courseId}_v${res.data.versionNumber}`, // Tạo ID duy nhất cho Tab
+              // ID duy nhất cho Tab để React không bị nhầm lẫn giữa các Version
+              id: `${res.data.courseId}_v${res.data.versionNumber}`,
             };
 
-            // 3. Gọi callback truyền lên App.tsx với ĐỦ 3 THAM SỐ như interface đã định nghĩa
-            // onViewDetail ở đây chính là props nhận từ App.tsx
-            onViewDetail?.("course", res.data.defaultName, enrichedData);
+            onViewDetail?.(
+              "course-version",
+              `${res.data.courseId} (v${res.data.versionNumber})`,
+              enrichedData,
+            );
           });
       }}
       onCreate={onCreate}
@@ -105,4 +108,4 @@ const CourseList = ({ onViewDetail, onCreate }: CourseListProps) => {
   );
 };
 
-export default CourseList;
+export default CourseVersionList;

@@ -45,7 +45,7 @@ interface InfiniteGridProps<
     filters: FilterRequest,
   ) => Promise<ApiResponse<PageResponse<EntityReponse>>>;
   onUpdate?: (data: EntityRequest) => Promise<EntityReponse>;
-  onCreate?: () => Promise<void>;
+  onCreate?: () => void;
   onDelete?: (id: string) => Promise<ApiResponse<void>>;
   onViewDetail?: (data: EntityReponse) => void; // Thêm dòng này
   pageSize?: number;

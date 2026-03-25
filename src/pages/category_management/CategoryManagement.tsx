@@ -16,6 +16,9 @@ import SubDepartmentList from "../../features/department/SubDepartmentList";
 import CourseList from "../../features/course/CourseList";
 import CourseDetailForm from "../../features/course/CourseDetailForm";
 import StudentList from "../../features/student/StudentList";
+import SchoolYearList from "../../features/school_year_list/SchoolYearList";
+import EducationProgramList from "../../features/education_program/EducationProgramList";
+import EducationProgramDetailForm from "../../features/education_program/EducationProgramDetailForm";
 
 const initialJson: IJsonModel = {
   global: {
@@ -186,8 +189,6 @@ const App = () => {
           />
         );
 
-      // Trong App.tsx, phần case "course_list":
-
       case "course_list":
         return (
           <CourseList
@@ -204,7 +205,6 @@ const App = () => {
                 {},
                 "course_detail_comp",
               );
-              return Promise.resolve(); // Trả về promise để đúng kiểu dữ liệu InfiniteGrid mong đợi
             }}
           />
         );
@@ -219,6 +219,30 @@ const App = () => {
           />
         );
 
+      case "school_year_list": // Thêm case này
+        return (
+          <SchoolYearList
+            onViewDetail={(idTabset, nameTab, data, labels) => {
+              onOpenDetail(idTabset, nameTab, data, labels);
+            }}
+          />
+        );
+
+      case "education_program_list":
+        return (
+          <EducationProgramList
+            onViewDetail={(idTabset, nametab, data, labels) => {
+              onOpenDetail(
+                idTabset,
+                nametab,
+                data,
+                labels,
+                "education_program_detail_comp",
+              );
+            }}
+          ></EducationProgramList>
+        );
+
       case "course_detail_comp":
         // Component hiển thị riêng cho Course (có ma trận CO-CLO)
         return (
@@ -230,6 +254,9 @@ const App = () => {
             }}
           />
         );
+
+      case "education_program_detail_comp":
+        return <EducationProgramDetailForm data={config.data} />;
 
       case "detail_comp":
         // Mặc định dùng Form động cho các thực thể cơ bản

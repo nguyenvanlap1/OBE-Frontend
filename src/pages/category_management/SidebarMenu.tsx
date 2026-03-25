@@ -5,6 +5,7 @@ import {
   Library,
   BookOpen,
   UserCheck,
+  CalendarDays,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
@@ -25,6 +26,12 @@ const SidebarMenu = ({
     { id: "subdepartment_list", name: "Quản lý khoa, bộ môn", icon: Library },
     { id: "course_list", name: "Quản lý Học phần", icon: BookOpen },
     { id: "student_list", name: "Quản lý sinh viên", icon: UserCheck },
+    { id: "school_year_list", name: "Quản lý Niên khóa", icon: CalendarDays },
+    {
+      id: "education_program_list",
+      name: "Quản lý chương trình đào tạo",
+      icon: GraduationCap,
+    },
   ];
 
   return (

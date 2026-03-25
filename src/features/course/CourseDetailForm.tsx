@@ -1,33 +1,38 @@
 import { useState } from "react";
 import { Save, Edit2 } from "lucide-react";
-import type {
-  CourseResponseDetail,
-  CourseUpdateRequestDetail,
-} from "../../services/courseService";
 import UniversalTable from "../../components/common/UniversalTable";
 import MappingMatrix from "../../components/common/MappingMatrix";
-import courseService from "../../services/courseService";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
+import logData from "../../utils/logData";
+import type {
+  CourseVersionRequestUpdateDetail,
+  CourseVersionResponseDetail,
+} from "../../services/courseVersionService";
+import courseVersionService from "../../services/courseVersionService";
 
 interface CourseDetailFormProps {
-  data: CourseResponseDetail;
-  onSave: (updatedData: CourseResponseDetail) => void;
+  data: CourseVersionResponseDetail;
+  onSave: (updatedData: CourseVersionResponseDetail) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   // Hàm khởi tạo để tránh lỗi map trên undefined
-  const [formData, setFormData] = useState<CourseResponseDetail>(() => ({
+  const [formData, setFormData] = useState<CourseVersionResponseDetail>(() => ({
     ...data,
-    defaultName: data.defaultName || "",
-    supDepartmentId: data.subDepartmentId || "",
-    subDepartmentName: data.subDepartmentName || "",
     courseId: data.courseId || "",
+    name: data.name || "",
     credits: data.credits || 0,
     versionNumber: data.versionNumber || 1,
+    subDepartmentId: data.subDepartmentId || "",
+    subDepartmentName: data.subDepartmentName || "",
+    departmentId: data.departmentId || "",
+    departmentName: data.departmentName || "",
+    fromDate: data.fromDate || new Date().toISOString().split("T")[0],
+    toDate: data.toDate || null,
     cos: data.cos || [],
     clos: data.clos || [],
     assessments: data.assessments || [],
@@ -35,19 +40,46 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
     assessmentCloMappings: data.assessmentCloMappings || [],
   }));
 
-  const isAllReady =
-    formData.cos.length > 0 &&
-    formData.clos.length > 0 &&
-    formData.assessments.length > 0 &&
-    formData.cos.every((c) => c.id && !String(c.id).startsWith("temp")) &&
-    formData.clos.every((c) => c.id && !String(c.id).startsWith("temp")) &&
-    formData.assessments.every((a) => a.id && !String(a.id).startsWith("temp"));
-
-  const handleChange = <K extends keyof CourseResponseDetail>(
+  const handleChange = <K extends keyof CourseVersionResponseDetail>(
     key: K,
-    value: CourseResponseDetail[K],
+    value: CourseVersionResponseDetail[K],
   ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    setFormData((prev) => {
+      const newState = { ...prev, [key]: value };
+
+      // LOGIC CLEANUP: Khi danh sách thực thể chính thay đổi, xóa mapping mồ côi
+      if (key === "clos") {
+        const currentCloCodes = new Set(
+          (value as any[]).map((i) => i.cloCode).filter(Boolean),
+        );
+        newState.coCloMappings = prev.coCloMappings.filter((m) =>
+          currentCloCodes.has(m.cloCode),
+        );
+        newState.assessmentCloMappings = prev.assessmentCloMappings.filter(
+          (m) => currentCloCodes.has(m.cloCode),
+        );
+      }
+
+      if (key === "cos") {
+        const currentCoCodes = new Set(
+          (value as any[]).map((i) => i.coCode).filter(Boolean),
+        );
+        newState.coCloMappings = prev.coCloMappings.filter((m) =>
+          currentCoCodes.has(m.coCode),
+        );
+      }
+
+      if (key === "assessments") {
+        const currentAsmCodes = new Set(
+          (value as any[]).map((i) => i.assessmentCode).filter(Boolean),
+        );
+        newState.assessmentCloMappings = prev.assessmentCloMappings.filter(
+          (m) => currentAsmCodes.has(m.assessmentCode),
+        );
+      }
+
+      return newState;
+    });
   };
 
   // --- HÀM LƯU GỌI API ---
@@ -67,8 +99,9 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
       };
 
       // 2. Tạo payload an toàn
-      const payload: CourseUpdateRequestDetail = {
+      const payload: CourseVersionRequestUpdateDetail = {
         ...formData,
+        toDate: formData.toDate ?? undefined,
         courseId: formData.courseId || "",
         cos: (formData.cos || []).map((item) => ({
           ...item,
@@ -82,27 +115,16 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
           ...item,
           id: sanitizeId(item.id),
         })),
-        coCloMappings: (formData.coCloMappings || []).map((m) => ({
-          ...m,
-          coId: sanitizeId(m.coId),
-          cloId: sanitizeId(m.cloId),
-        })),
-        assessmentCloMappings: (formData.assessmentCloMappings || []).map(
-          (m) => ({
-            ...m,
-            assessmentId: sanitizeId(m.assessmentId),
-            cloId: sanitizeId(m.cloId),
-          }),
-        ),
       };
 
       // 3. Logic quyết định Create hay Update
       // Kiểm tra nếu courseId là mã tạm hoặc prop truyền vào đánh dấu là tạo mới
       const isNew = formData.courseId.startsWith("new_") || !data.courseId;
-
+      console.log("giữ liệu trước khi gửi đi!");
+      logData(payload);
       const response = isNew
-        ? await courseService.createDetail(payload)
-        : await courseService.updateDetail(payload);
+        ? await courseVersionService.createFirst(payload)
+        : await courseVersionService.update(payload);
 
       if (response.status === 200 || response.status === 201) {
         toast.success(
@@ -113,8 +135,7 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
         if (response.data) {
           // Cập nhật lại form với data có ID thật từ DB
           setFormData(response.data);
-          // Thông báo cho component cha (nếu cần) để cập nhật danh sách hoặc URL
-          onSave(response.data);
+          logData(response.data);
         }
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,10 +149,7 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
   // Hàm helper để render input nhanh hơn
   const renderEditableField = (
     // Chỉ cho phép các key có giá trị là string hoặc number
-    key: keyof Omit<
-      CourseResponseDetail,
-      "cos" | "clos" | "assessments" | "coCloMappings" | "assessmentCloMappings"
-    >,
+    key: keyof Omit<CourseVersionResponseDetail, never>,
     type: string = "text",
   ) => {
     if (isEditing) {
@@ -190,12 +208,12 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
           <span className="font-bold whitespace-nowrap">1. Tên học phần:</span>
           {isEditing ? (
             <input
-              className="flex-1 border-b border-dotted border-black outline-none px-1 bg-yellow-50 font-sans font-bold uppercase"
-              value={formData.defaultName}
-              onChange={(e) => handleChange("defaultName", e.target.value)}
+              className="flex-1 border-b border-dotted border-black outline-none px-1 bg-yellow-50 font-sans font-bold"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
             />
           ) : (
-            <span className="font-bold uppercase">{formData.defaultName}</span>
+            <span className="font-bold uppercase">{formData.name}</span>
           )}
         </div>
 
@@ -259,7 +277,7 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
       <UniversalTable
         title="4. Mục tiêu học phần"
         data={formData.cos}
-        keys={["code", "content"]}
+        keys={["coCode", "content"]}
         columnNames={["Mục tiêu", "Nội dung mục tiêu"]}
         isEditing={isEditing}
         onDataChange={(newData) => handleChange("cos", newData)}
@@ -269,7 +287,7 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
       <UniversalTable
         title="5. Chuẩn đầu ra của học phần"
         data={formData.clos}
-        keys={["code", "content"]}
+        keys={["cloCode", "content"]}
         columnNames={["CĐR HP", "Nội dung chuẩn đầu ra"]}
         isEditing={isEditing}
         onDataChange={(newData) => handleChange("clos", newData)}
@@ -279,67 +297,90 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
       <UniversalTable
         title="6. Cấu trúc đánh giá"
         data={formData.assessments}
-        keys={["name", "regulation", "weight"]}
-        columnNames={["Thành phần đánh giá", "Quy định", "Tỷ trọng (%)"]}
+        keys={["assessmentCode", "name", "regulation", "weight"]}
+        columnNames={["STT", "Thành phần đánh giá", "Quy định", "Tỷ trọng (%)"]}
         isEditing={isEditing}
         onDataChange={(newData) => handleChange("assessments", newData)}
       />
       <MappingMatrix
         title="7. Ma trận mapping CO - CLO"
-        rows={formData.clos} // CLO nằm dọc
-        cols={formData.cos} // CO nằm ngang
+        rows={formData.clos}
+        cols={formData.cos}
+        rowKey="id"
+        colKey="id"
+        rowLabelKey="cloCode"
+        colLabelKey="coCode"
         labels={{ row: "CLO", col: "CO" }}
-        // Map dữ liệu cũ sang tên biến mới
-        mappings={formData.coCloMappings.map((m) => ({
-          rowId: m.cloId,
-          colId: m.coId,
-          weight: m.weight,
-        }))}
-        isEditing={isEditing && isAllReady}
-        onMappingChange={(newMappings) => {
-          // Khi lưu, map ngược lại đúng định dạng của API
-          const apiData = newMappings.map((m) => ({
-            cloId: m.rowId,
-            coId: m.colId,
+        // 1. Chuyển mapping sang dùng ID thay vì Code để MappingMatrix quản lý chính xác từng ô
+        mappings={formData.coCloMappings.map((m) => {
+          const rowObj = formData.clos.find((r) => r.cloCode === m.cloCode);
+          const colObj = formData.cos.find((c) => c.coCode === m.coCode);
+          return {
+            rowId: String(rowObj?.id || m.cloCode), // Ưu tiên lấy ID tạm
+            colId: String(colObj?.id || m.coCode),
             weight: m.weight,
-          }));
+          };
+        })}
+        isEditing={isEditing}
+        onMappingChange={(newMappings) => {
+          // 2. Khi có thay đổi, tìm ngược lại Code từ ID để cập nhật vào formData
+          const apiData = newMappings.map((m) => {
+            const rowObj = formData.clos.find((r) => String(r.id) === m.rowId);
+            const colObj = formData.cos.find((c) => String(c.id) === m.colId);
+            return {
+              cloCode: rowObj?.cloCode || "", // Nếu hàng mới chưa nhập code thì để rỗng
+              coCode: colObj?.coCode || "",
+              weight: m.weight,
+            };
+          });
+          console.log(apiData);
           handleChange("coCloMappings", apiData);
         }}
       />
-      {!isAllReady && isEditing && (
-        <p className="text-red-500 text-sm mb-2">
-          ⚠️ Bạn phải lưu CO, CLO và Assessment trước khi thực hiện mapping.
-        </p>
-      )}
+      {/* 8. Ma trận mapping Assessment - CLO */}
       {/* 8. Ma trận mapping Assessment - CLO */}
       <MappingMatrix
         title="8. Ma trận mapping Assessment - CLO"
-        // Đổi: Assessment xuống hàng dọc
-        rows={formData.assessments.map((a) => ({ id: a.id, code: a.name }))}
-        // Đổi: CLO lên hàng ngang
-        cols={formData.clos}
-        labels={{ row: "Bài đánh giá", col: "CLO" }}
-        mappings={formData.assessmentCloMappings.map((m) => ({
-          rowId: m.assessmentId, // Bây giờ rowId ứng với Assessment
-          colId: m.cloId, // colId ứng với CLO
-          weight: m.weight,
-        }))}
-        isEditing={isEditing && isAllReady}
-        onMappingChange={(newMappings) => {
-          // Khi lưu về API, vẫn phải giữ đúng tên field cloId và assessmentId
-          const apiData = newMappings.map((m) => ({
-            assessmentId: m.rowId,
-            cloId: m.colId,
+        rows={formData.clos} // Hàng là CLO
+        cols={formData.assessments} // Cột là Assessment
+        rowKey="id" // Dùng id để giữ identity ổn định
+        colKey="id" // Dùng id để tránh tạo thêm cột khi gõ tên Assessment
+        rowLabelKey="cloCode"
+        colLabelKey="name" // Hiển thị name (Thành phần đánh giá) lên đầu cột
+        labels={{ row: "CLO", col: "Bài đánh giá" }}
+        // 1. Chuyển đổi dữ liệu từ Code sang ID tạm thời để truyền vào Matrix
+        mappings={formData.assessmentCloMappings.map((m) => {
+          const rowObj = formData.clos.find((r) => r.cloCode === m.cloCode);
+          // Lưu ý: So khớp theo assessmentName của mapping và name của bảng Assessments
+          const colObj = formData.assessments.find(
+            (a) => a.assessmentCode === m.assessmentCode,
+          );
+
+          return {
+            rowId: String(rowObj?.id || m.cloCode),
+            colId: String(colObj?.id || m.assessmentCode),
             weight: m.weight,
-          }));
+          };
+        })}
+        isEditing={isEditing}
+        onMappingChange={(newMappings) => {
+          // 2. Khi có thay đổi, tìm ngược lại Code từ ID để lưu về State chính (formData)
+          const apiData = newMappings.map((m) => {
+            const rowObj = formData.clos.find((r) => String(r.id) === m.rowId);
+            const colObj = formData.assessments.find(
+              (a) => String(a.id) === m.colId,
+            );
+
+            return {
+              assessmentCode: colObj?.assessmentCode || "", // Lấy code từ object tìm được
+              assessmentName: colObj?.name || "", // Lấy tên mới nhất từ input
+              cloCode: rowObj?.cloCode || "", // Lấy mã CLO
+              weight: m.weight,
+            };
+          });
           handleChange("assessmentCloMappings", apiData);
         }}
       />
-      {!isAllReady && isEditing && (
-        <p className="text-red-500 text-sm mb-2">
-          ⚠️ Bạn phải lưu CO, CLO và Assessment trước khi thực hiện mapping.
-        </p>
-      )}
     </div>
   );
 };
