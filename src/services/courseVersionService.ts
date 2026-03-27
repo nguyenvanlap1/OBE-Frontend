@@ -70,7 +70,7 @@ interface CloRequest {
 }
 
 interface AssessmentRequest {
-  assessmentCode: string;
+  assessmentCode: number;
   name: string;
   regulation: string;
   weight: number;
@@ -126,11 +126,15 @@ export interface CourseVersionResponseDetail {
     weight: number;
   }[];
   coCloMappings: {
+    coId: number;
+    cloId: number;
     coCode: string;
     cloCode: string;
     weight: number;
   }[];
   assessmentCloMappings: {
+    cloId: number;
+    assessmentId: number;
     assessmentCode: string;
     assessmentName: string;
     cloCode: string;

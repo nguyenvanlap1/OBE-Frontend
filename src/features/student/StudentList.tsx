@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import type { ColDef } from "ag-grid-community";
-
-import studentService, {
-  type StudentFilterRequest,
-  type StudentRequest,
-  type StudentResponse,
+import studentService from "../../services/studentService";
+import type {
+  StudentFilterRequest,
+  StudentUpdateRequest,
+  StudentResponse,
 } from "../../services/studentService";
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
 
@@ -16,68 +16,101 @@ interface StudentListProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     labels: any,
   ) => void;
+  onCreate: () => void;
 }
 
-const StudentList = ({ onViewDetail }: StudentListProps) => {
+const StudentList = ({ onViewDetail, onCreate }: StudentListProps) => {
+  // Hàm helper để hiển thị danh sách Set/Array dưới dạng chuỗi cách nhau bởi dấu phẩy
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const listFormatter = (params: any) => {
+    const value = params.value;
+    if (Array.isArray(value) && value.length > 0) {
+      return value.join(", "); // Ví dụ: "Lớp A, Lớp B"
+    }
+    return "---";
+  };
+
+  // 1. Định nghĩa các cột
   const columnDefs = useMemo<ColDef<StudentResponse>[]>(
     () => [
       {
         field: "id",
-        headerName: "Mã Số Sinh Viên",
+        headerName: "MSSV",
+        flex: 0.8,
         filter: "agTextColumnFilter",
-        checkboxSelection: true,
-        headerCheckboxSelection: true,
+        pinned: "left",
       },
       {
         field: "fullName",
         headerName: "Họ và Tên",
         editable: true,
         filter: "agTextColumnFilter",
-        cellClass: "font-medium text-blue-600",
+        flex: 1.2,
+        cellClass: "font-medium",
       },
       {
         field: "gender",
         headerName: "Giới tính",
         editable: true,
-        width: 120,
-        filter: "agTextColumnFilter",
+        flex: 0.6,
+        // Có thể dùng cellEditor dạng select ở đây nếu muốn
       },
       {
-        field: "educationProgramIds",
+        field: "studentClassesId",
+        headerName: "Lớp học",
+        flex: 1,
+        filter: "agTextColumnFilter",
+        valueFormatter: listFormatter, // Xử lý hiển thị mảng ID lớp
+      },
+      {
+        field: "educationProgramName",
         headerName: "Chương trình đào tạo",
-        filter: false,
-        valueFormatter: (params) => {
-          return params.value ? params.value.join(", ") : "Chưa cập nhật";
-        },
-        cellClass: "text-gray-500 italic",
+        flex: 1.5,
+        filter: "agTextColumnFilter",
+        valueFormatter: listFormatter, // Xử lý hiển thị mảng tên CTĐT
+      },
+      {
+        field: "departmentName",
+        headerName: "Khoa",
+        flex: 1,
+        valueFormatter: listFormatter,
       },
     ],
     [],
   );
 
-  const labels = {
+  // Nhãn hiển thị cho chi tiết
+  const studentLabels = {
     id: "Mã số sinh viên",
     fullName: "Họ và tên",
     gender: "Giới tính",
-    educationProgramIds: "Danh sách chương trình học",
+    studentClassesId: "Danh sách lớp tham gia",
+    educationProgramName: "Chương trình đào tạo",
+    subDepartmentName: "Bộ môn quản lý",
+    departmentName: "Thuộc khoa",
   };
 
   return (
-    <InfiniteGrid<StudentResponse, StudentRequest, StudentFilterRequest>
-      title="Quản lý Sinh viên"
-      description="Dữ liệu sinh viên tham gia hệ thống đào tạo OBE"
+    <InfiniteGrid<StudentResponse, StudentUpdateRequest, StudentFilterRequest>
       columnDefs={columnDefs}
-      // Dùng getAll phù hợp với PageableRequest và FilterRequest
-      fetchData={studentService.getAll}
-      onUpdate={(data) =>
-        studentService.update(data.id, data).then((res) => res.data)
-      }
+      fetchData={studentService.search}
+      onUpdate={async (data) => {
+        // Map từ Response sang UpdateRequest (vì update cần Set mã lớp)
+        const payload: StudentUpdateRequest = {
+          id: data.id,
+          fullName: data.fullName,
+          gender: data.gender,
+          studentClassesId: data.studentClassesId,
+        };
+        const res = await studentService.update(data.id, payload);
+        return res.data;
+      }}
       onDelete={studentService.delete}
       onViewDetail={(data) => {
-        onViewDetail?.("student", data.fullName, data, labels);
-        console.log("Viewing student detail: ", data.id);
+        onViewDetail?.("student", data.id, data, studentLabels);
       }}
-      pageSize={20}
+      onCreate={onCreate}
+      title={"Quản lý hồ sơ Sinh viên"}
     />
   );
 };

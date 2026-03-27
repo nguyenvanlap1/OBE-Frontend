@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Save, Edit2 } from "lucide-react";
 import UniversalTable from "../../components/common/UniversalTable";
-import MappingMatrix from "../../components/common/MappingMatrix";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
@@ -11,6 +10,8 @@ import type {
   CourseVersionResponseDetail,
 } from "../../services/courseVersionService";
 import courseVersionService from "../../services/courseVersionService";
+import MappingMatrix2 from "../../components/common/MappingMatrix2";
+import MappingMatrix3 from "../../components/common/MappingMatrix3";
 
 interface CourseDetailFormProps {
   data: CourseVersionResponseDetail;
@@ -40,83 +41,69 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
     assessmentCloMappings: data.assessmentCloMappings || [],
   }));
 
-  const handleChange = <K extends keyof CourseVersionResponseDetail>(
-    key: K,
-    value: CourseVersionResponseDetail[K],
-  ) => {
-    setFormData((prev) => {
-      const newState = { ...prev, [key]: value };
-
-      // LOGIC CLEANUP: Khi danh sách thực thể chính thay đổi, xóa mapping mồ côi
-      if (key === "clos") {
-        const currentCloCodes = new Set(
-          (value as any[]).map((i) => i.cloCode).filter(Boolean),
-        );
-        newState.coCloMappings = prev.coCloMappings.filter((m) =>
-          currentCloCodes.has(m.cloCode),
-        );
-        newState.assessmentCloMappings = prev.assessmentCloMappings.filter(
-          (m) => currentCloCodes.has(m.cloCode),
-        );
-      }
-
-      if (key === "cos") {
-        const currentCoCodes = new Set(
-          (value as any[]).map((i) => i.coCode).filter(Boolean),
-        );
-        newState.coCloMappings = prev.coCloMappings.filter((m) =>
-          currentCoCodes.has(m.coCode),
-        );
-      }
-
-      if (key === "assessments") {
-        const currentAsmCodes = new Set(
-          (value as any[]).map((i) => i.assessmentCode).filter(Boolean),
-        );
-        newState.assessmentCloMappings = prev.assessmentCloMappings.filter(
-          (m) => currentAsmCodes.has(m.assessmentCode),
-        );
-      }
-
-      return newState;
-    });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChange = (key: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   // --- HÀM LƯU GỌI API ---
   // --- HÀM LƯU GỌI API ---
   const handleSave = async () => {
     try {
-      // 1. Hàm sanitize để dọn dẹp ID tạm
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sanitizeId = (id: any) => {
-        if (
-          typeof id === "string" &&
-          (id.startsWith("temp") || id.startsWith("new_"))
-        ) {
-          return null;
-        }
-        return id;
-      };
+      // 1. Sanitize các danh sách chính
+      const sanitizedCos = formData.cos.map((item) => ({
+        ...item,
+        id: String(item.id).startsWith("temp") ? null : item.id,
+      }));
+      const sanitizedClos = formData.clos.map((item) => ({
+        ...item,
+        id: String(item.id).startsWith("temp") ? null : item.id,
+      }));
+      const sanitizedAsms = formData.assessments.map((item) => ({
+        ...item,
+        id: String(item.id).startsWith("temp") ? null : item.id,
+      }));
 
-      // 2. Tạo payload an toàn
+      // 2. CHỐT HẠ: Tìm Code từ ID cho các Mapping
+      const coCloMappingsForBackend = formData.coCloMappings
+        .map((m) => {
+          const clo = formData.clos.find(
+            (p) => String(p.id) === String(m.cloId),
+          );
+          const co = formData.cos.find((p) => String(p.id) === String(m.coId));
+          return {
+            cloCode: clo?.cloCode || "",
+            coCode: co?.coCode || "",
+            weight: m.weight,
+          };
+        })
+        .filter((m) => m.cloCode && m.coCode);
+
+      const assessmentCloMappingsForBackend = formData.assessmentCloMappings
+        .map((m) => {
+          const clo = formData.clos.find(
+            (p) => String(p.id) === String(m.cloId),
+          );
+          const asm = formData.assessments.find(
+            (p) => String(p.id) === String(m.assessmentId),
+          );
+          return {
+            cloCode: clo?.cloCode || "",
+            assessmentCode: asm?.assessmentCode || "",
+            weight: m.weight,
+          };
+        })
+        .filter((m) => m.cloCode && m.assessmentCode);
+
       const payload: CourseVersionRequestUpdateDetail = {
         ...formData,
-        toDate: formData.toDate ?? undefined,
-        courseId: formData.courseId || "",
-        cos: (formData.cos || []).map((item) => ({
-          ...item,
-          id: sanitizeId(item.id),
-        })),
-        clos: (formData.clos || []).map((item) => ({
-          ...item,
-          id: sanitizeId(item.id),
-        })),
-        assessments: (formData.assessments || []).map((item) => ({
-          ...item,
-          id: sanitizeId(item.id),
-        })),
+        toDate: formData.toDate === null ? undefined : formData.toDate,
+        cos: sanitizedCos,
+        clos: sanitizedClos,
+        assessments: sanitizedAsms,
+        coCloMappings: coCloMappingsForBackend,
+        assessmentCloMappings: assessmentCloMappingsForBackend,
       };
-
       // 3. Logic quyết định Create hay Update
       // Kiểm tra nếu courseId là mã tạm hoặc prop truyền vào đánh dấu là tạo mới
       const isNew = formData.courseId.startsWith("new_") || !data.courseId;
@@ -302,83 +289,58 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
         isEditing={isEditing}
         onDataChange={(newData) => handleChange("assessments", newData)}
       />
-      <MappingMatrix
+      <MappingMatrix2
         title="7. Ma trận mapping CO - CLO"
-        rows={formData.clos}
-        cols={formData.cos}
-        rowKey="id"
-        colKey="id"
-        rowLabelKey="cloCode"
-        colLabelKey="coCode"
+        // Chuẩn hóa rows và cols về định dạng {id, code}
+        rows={formData.clos.map((p) => ({ id: p.id, code: p.cloCode }))}
+        cols={formData.cos.map((p) => ({ id: p.id, code: p.coCode }))}
+        // Mapping dùng trực tiếp ID
+        mappings={formData.coCloMappings.map((m) => ({
+          rowId: m.cloId,
+          colId: m.coId,
+          weight: m.weight,
+        }))}
         labels={{ row: "CLO", col: "CO" }}
-        // 1. Chuyển mapping sang dùng ID thay vì Code để MappingMatrix quản lý chính xác từng ô
-        mappings={formData.coCloMappings.map((m) => {
-          const rowObj = formData.clos.find((r) => r.cloCode === m.cloCode);
-          const colObj = formData.cos.find((c) => c.coCode === m.coCode);
-          return {
-            rowId: String(rowObj?.id || m.cloCode), // Ưu tiên lấy ID tạm
-            colId: String(colObj?.id || m.coCode),
-            weight: m.weight,
-          };
-        })}
         isEditing={isEditing}
         onMappingChange={(newMappings) => {
-          // 2. Khi có thay đổi, tìm ngược lại Code từ ID để cập nhật vào formData
-          const apiData = newMappings.map((m) => {
-            const rowObj = formData.clos.find((r) => String(r.id) === m.rowId);
-            const colObj = formData.cos.find((c) => String(c.id) === m.colId);
-            return {
-              cloCode: rowObj?.cloCode || "", // Nếu hàng mới chưa nhập code thì để rỗng
-              coCode: colObj?.coCode || "",
-              weight: m.weight,
-            };
-          });
-          console.log(apiData);
-          handleChange("coCloMappings", apiData);
+          const apiFormat = newMappings.map((m) => ({
+            cloId: m.rowId as any, // Ép kiểu để chấp nhận string/number tạm thời
+            coId: m.colId as any,
+            weight: m.weight,
+            cloCode: "",
+            coCode: "",
+          }));
+          handleChange("coCloMappings", apiFormat as any); // Thêm as any ở đây nếu TS vẫn báo lỗi tại handleChange
         }}
       />
       {/* 8. Ma trận mapping Assessment - CLO */}
-      {/* 8. Ma trận mapping Assessment - CLO */}
-      <MappingMatrix
+      <MappingMatrix3
         title="8. Ma trận mapping Assessment - CLO"
-        rows={formData.clos} // Hàng là CLO
-        cols={formData.assessments} // Cột là Assessment
-        rowKey="id" // Dùng id để giữ identity ổn định
-        colKey="id" // Dùng id để tránh tạo thêm cột khi gõ tên Assessment
-        rowLabelKey="cloCode"
-        colLabelKey="name" // Hiển thị name (Thành phần đánh giá) lên đầu cột
+        // Ở đây mình lấy cả Code và Name để hiển thị cho rõ
+        rows={formData.clos.map((p) => ({
+          id: p.id,
+          displayLabel: p.cloCode,
+        }))}
+        cols={formData.assessments.map((p) => ({
+          id: p.id,
+          displayLabel: `${p.assessmentCode}: ${p.name}`, // Hiển thị "A1: Chuyên cần"
+        }))}
+        mappings={formData.assessmentCloMappings.map((m) => ({
+          rowId: m.cloId,
+          colId: m.assessmentId,
+          weight: m.weight,
+        }))}
         labels={{ row: "CLO", col: "Bài đánh giá" }}
-        // 1. Chuyển đổi dữ liệu từ Code sang ID tạm thời để truyền vào Matrix
-        mappings={formData.assessmentCloMappings.map((m) => {
-          const rowObj = formData.clos.find((r) => r.cloCode === m.cloCode);
-          // Lưu ý: So khớp theo assessmentName của mapping và name của bảng Assessments
-          const colObj = formData.assessments.find(
-            (a) => a.assessmentCode === m.assessmentCode,
-          );
-
-          return {
-            rowId: String(rowObj?.id || m.cloCode),
-            colId: String(colObj?.id || m.assessmentCode),
-            weight: m.weight,
-          };
-        })}
         isEditing={isEditing}
         onMappingChange={(newMappings) => {
-          // 2. Khi có thay đổi, tìm ngược lại Code từ ID để lưu về State chính (formData)
-          const apiData = newMappings.map((m) => {
-            const rowObj = formData.clos.find((r) => String(r.id) === m.rowId);
-            const colObj = formData.assessments.find(
-              (a) => String(a.id) === m.colId,
-            );
-
-            return {
-              assessmentCode: colObj?.assessmentCode || "", // Lấy code từ object tìm được
-              assessmentName: colObj?.name || "", // Lấy tên mới nhất từ input
-              cloCode: rowObj?.cloCode || "", // Lấy mã CLO
-              weight: m.weight,
-            };
-          });
-          handleChange("assessmentCloMappings", apiData);
+          const apiFormat = newMappings.map((m) => ({
+            cloId: m.rowId as any,
+            assessmentId: m.colId as any,
+            weight: m.weight,
+            cloCode: "",
+            assessmentCode: "",
+          }));
+          handleChange("assessmentCloMappings", apiFormat);
         }}
       />
     </div>

@@ -15,10 +15,18 @@ import DynamicEntityForm from "../../components/common/DynamicEntityForm";
 import SubDepartmentList from "../../features/department/SubDepartmentList";
 import CourseList from "../../features/course/CourseList";
 import CourseDetailForm from "../../features/course/CourseDetailForm";
-import StudentList from "../../features/student/StudentList";
 import SchoolYearList from "../../features/school_year_list/SchoolYearList";
 import EducationProgramList from "../../features/education_program/EducationProgramList";
 import EducationProgramDetailForm from "../../features/education_program/EducationProgramDetailForm";
+import StudentClassList from "../../features/student_class_list/StudentClassList";
+import StudentClassDetailForm from "../../features/student_class_list/StudentClassDetailForm";
+import StudentDetailForm from "../../features/student/StudentDetailForm";
+import StudentList from "../../features/student/StudentList";
+import SemesterList from "../../features/semester/SemesterList";
+import CourseSectionList from "../../features/course_section/CourseSectionList";
+import CourseSectionDetailForm from "../../features/course_section/CourseSectionDetailForm";
+import LecturerList from "../../features/lecture/LecturerList";
+import LecturerDetailForm from "../../features/lecture/LecturerDetailForm";
 
 const initialJson: IJsonModel = {
   global: {
@@ -95,7 +103,7 @@ const App = () => {
     forceUpdate();
   };
 
-  const onOpenDetail = <T extends { id: string }>(
+  const onOpenDetail = <T extends { id: string | number }>(
     idTabset: string,
     nameTab: string,
     data: T,
@@ -103,6 +111,7 @@ const App = () => {
     labels: any,
     // Thêm tham số này để xác định component cần render
     componentName: string = "detail_comp",
+    onSave?: (data: T) => void,
   ) => {
     const tabId = `detail_${idTabset}_${data.id}`;
     const RIGHT_PANEL_ID = `detail_panel_right_${idTabset}`;
@@ -123,7 +132,7 @@ const App = () => {
             id: tabId,
             name: `Chi tiết: ${nameTab}`,
             component: componentName,
-            config: { data, labels },
+            config: { data, labels, onSave },
           },
           RIGHT_PANEL_ID,
           DockLocation.CENTER,
@@ -138,7 +147,7 @@ const App = () => {
             id: tabId,
             name: `Chi tiết: ${nameTab}`,
             component: componentName,
-            config: { data, labels },
+            config: { data, labels, onSave },
           },
           "main_tabset_container",
           DockLocation.RIGHT,
@@ -189,6 +198,107 @@ const App = () => {
           />
         );
 
+      case "student_class_list":
+        return (
+          <StudentClassList
+            onViewDetail={(idTabset, nameTab, data, labels) => {
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                labels,
+                "student_class_detail_comp",
+              );
+            }}
+            onCreate={() => {
+              const newStudentClass = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "studentClass",
+                "Lớp sinh viên mới",
+                newStudentClass,
+                {},
+                "student_class_detail_comp",
+              );
+            }}
+          />
+        );
+
+      case "lecturer_list":
+        return (
+          <LecturerList
+            onViewDetail={(idTabset, nameTab, data, labels) => {
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                labels,
+                "lecturer_detail_comp",
+              );
+            }}
+            onCreate={() => {
+              const newStudentClass = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "lecturer",
+                "Giảng viên mới viên mới",
+                newStudentClass,
+                {},
+                "lecturer_detail_comp",
+              );
+            }}
+          />
+        );
+
+      case "student_list":
+        return (
+          <StudentList
+            onViewDetail={(idTabset, nameTab, data, labels) => {
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                labels,
+                "student_detail_comp", // Component hiển thị chi tiết
+              );
+            }}
+            // SỬA TẠI ĐÂY: Thêm () => { } để bao bọc logic
+            onCreate={() => {
+              const newStudent = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "student",
+                "Sinh viên mới",
+                newStudent,
+                {},
+                "student_detail_comp",
+              );
+            }}
+          />
+        );
+
+      case "course_section_list":
+        return (
+          <CourseSectionList
+            onViewDetail={(idTabset, nameTab, data, labels) => {
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                labels,
+                "course_section_detail_comp", // Component hiển thị chi tiết
+              );
+            }}
+            onCreate={function (): void {
+              const courseSection = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "courseSection",
+                "Lớp học phần mới",
+                courseSection,
+                {},
+                "course_section_detail_comp",
+              );
+            }}
+          />
+        );
+
       case "course_list":
         return (
           <CourseList
@@ -209,19 +319,18 @@ const App = () => {
           />
         );
 
-      case "student_list":
+      case "school_year_list": // Thêm case này
         return (
-          <StudentList
+          <SchoolYearList
             onViewDetail={(idTabset, nameTab, data, labels) => {
-              // Mở form chi tiết sinh viên ở panel bên phải
               onOpenDetail(idTabset, nameTab, data, labels);
             }}
           />
         );
 
-      case "school_year_list": // Thêm case này
+      case "semester_list":
         return (
-          <SchoolYearList
+          <SemesterList
             onViewDetail={(idTabset, nameTab, data, labels) => {
               onOpenDetail(idTabset, nameTab, data, labels);
             }}
@@ -243,6 +352,8 @@ const App = () => {
           ></EducationProgramList>
         );
 
+      //-----detail comp ------
+
       case "course_detail_comp":
         // Component hiển thị riêng cho Course (có ma trận CO-CLO)
         return (
@@ -250,6 +361,9 @@ const App = () => {
             key={config.data}
             data={config.data}
             onSave={(updatedData) => {
+              if (config.onSave) {
+                config.onSave(config.data);
+              }
               console.log("Saving Course:", updatedData);
             }}
           />
@@ -258,14 +372,27 @@ const App = () => {
       case "education_program_detail_comp":
         return <EducationProgramDetailForm data={config.data} />;
 
+      case "student_class_detail_comp":
+        return <StudentClassDetailForm data={config.data} />;
+
+      case "course_section_detail_comp":
+        return <CourseSectionDetailForm data={config.data} />;
+
+      case "lecturer_detail_comp":
+        return <LecturerDetailForm data={config.data} />;
+
+      case "student_detail_comp":
+        return <StudentDetailForm data={config.data} />;
+
       case "detail_comp":
-        // Mặc định dùng Form động cho các thực thể cơ bản
         return (
           <DynamicEntityForm
             data={config.data}
             fieldLabels={config.labels}
             onSave={(updatedData) => {
-              console.log("Saving Generic Entity:", updatedData);
+              // Sử dụng optional chaining để an toàn hơn
+              config.onSave?.(updatedData);
+              console.log("Saved data:", updatedData);
             }}
           />
         );

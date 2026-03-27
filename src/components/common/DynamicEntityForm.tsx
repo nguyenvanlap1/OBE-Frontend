@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Save, Edit2, X } from "lucide-react";
+import type { ApiResponse } from "../../services/api";
+import type { AxiosError } from "axios";
+import { toast } from "react-toastify";
 
 interface DynamicFormProps<T> {
   data: T;
@@ -29,9 +32,20 @@ const DynamicEntityForm = <T extends Record<string, any>>({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    onSave(formData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      // Gọi hàm onSave được truyền từ cha và đợi kết quả
+      await onSave(formData);
+
+      // Nếu không có lỗi, đóng chế độ edit
+      setIsEditing(false);
+    } catch (error: unknown) {
+      // Lỗi ở đây thường đã được toast ở hàm onSave của cha,
+      // nhưng ta vẫn giữ catch để tránh crash ứng dụng
+      console.error("Save error:", error);
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message);
+    }
   };
 
   // Ưu tiên lấy từ fieldLabels, không có mới nội suy

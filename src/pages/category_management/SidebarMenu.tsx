@@ -1,11 +1,13 @@
 import {
   Users,
   GraduationCap,
-  Table,
   Library,
   BookOpen,
   UserCheck,
   CalendarDays,
+  Calendar,
+  Presentation,
+  UserCog,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
@@ -16,8 +18,6 @@ const SidebarMenu = ({
 }) => {
   // Định nghĩa danh sách menu tại đây cho gọn
   const menuItems = [
-    { id: "user_list", name: "Quản lý Người dùng", icon: Users },
-    { id: "plo_matrix", name: "Ma trận CLO-PLO", icon: Table },
     {
       id: "department_list",
       name: "Quản lý trường, khoa",
@@ -25,8 +25,25 @@ const SidebarMenu = ({
     },
     { id: "subdepartment_list", name: "Quản lý khoa, bộ môn", icon: Library },
     { id: "course_list", name: "Quản lý Học phần", icon: BookOpen },
+    {
+      id: "course_section_list",
+      name: "Quản lý Lớp học phần",
+      icon: Presentation,
+    },
+    {
+      id: "lecturer_list",
+      name: "Quản lý Giảng viên",
+      icon: UserCog,
+    },
     { id: "student_list", name: "Quản lý sinh viên", icon: UserCheck },
+    {
+      id: "student_class_list",
+      name: "Quản lý Lớp sinh viên",
+      icon: Users, // Hoặc School từ lucide-react
+    },
     { id: "school_year_list", name: "Quản lý Niên khóa", icon: CalendarDays },
+    // --- BỔ SUNG HỌC KỲ TẠI ĐÂY ---
+    { id: "semester_list", name: "Quản lý Học kỳ", icon: Calendar },
     {
       id: "education_program_list",
       name: "Quản lý chương trình đào tạo",

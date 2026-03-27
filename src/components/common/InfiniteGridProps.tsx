@@ -35,8 +35,8 @@ const myTheme = themeQuartz.withParams({
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface InfiniteGridProps<
-  EntityReponse extends { id: string },
-  EntityRequest extends { id: string },
+  EntityReponse extends { id: string | number },
+  EntityRequest extends { id: string | number },
   FilterRequest,
 > {
   columnDefs: ColDef<EntityReponse>[];
@@ -54,8 +54,8 @@ interface InfiniteGridProps<
 }
 
 export const InfiniteGrid = <
-  EntityReponse extends { id: string },
-  EntityRequest extends { id: string },
+  EntityReponse extends { id: string | number },
+  EntityRequest extends { id: string | number },
   FilterRequest,
 >({
   columnDefs,
