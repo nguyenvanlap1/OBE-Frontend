@@ -1,39 +1,16 @@
 import api from "./api";
 import type { ApiResponse, PageableRequest, PageResponse } from "./api";
-
 /**
  * --- INTERFACES FOR REQUESTS ---
  */
 
-export interface CourseVersionFilterRequest {
-  courseId?: string;
-  versionNumber?: number;
-  credits?: number;
-  courseName?: string;
-  active?: boolean;
-  subDepartmentId?: string;
-  departmentId?: string;
-  educationProgramId?: string;
-}
+// ... các interface khác giữ nguyên ...
 
 export interface CourseVersionRequestCreateFirstDetail {
   courseId: string;
   name: string;
   subDepartmentId: string;
   credits: number;
-  fromDate: string; // LocalDate mapping to string (ISO format)
-  toDate?: string;
-  cos: CoRequest[];
-  clos: CloRequest[];
-  assessments: AssessmentRequest[];
-  coCloMappings: CoCloMappingRequest[];
-  assessmentCloMappings: AssessmentCloMappingRequest[];
-}
-
-export interface CourseVersionRequestCreateDetail {
-  courseId: string;
-  name: string;
-  credits: number;
   fromDate: string;
   toDate?: string;
   cos: CoRequest[];
@@ -43,20 +20,7 @@ export interface CourseVersionRequestCreateDetail {
   assessmentCloMappings: AssessmentCloMappingRequest[];
 }
 
-export interface CourseVersionRequestUpdateDetail {
-  courseId: string;
-  subDepartmentId: string;
-  versionNumber: number;
-  name: string;
-  credits: number;
-  fromDate: string;
-  toDate?: string;
-  cos: (CoRequest & { id: number | null })[];
-  clos: (CloRequest & { id: number | null })[];
-  assessments: (AssessmentRequest & { id: number | null })[];
-  coCloMappings: CoCloMappingRequest[];
-  assessmentCloMappings: AssessmentCloMappingRequest[];
-}
+// ... các interface khác giữ nguyên ...
 
 // Sub-interfaces cho Request
 interface CoRequest {
@@ -70,7 +34,7 @@ interface CloRequest {
 }
 
 interface AssessmentRequest {
-  assessmentCode: number;
+  assessmentCode: number; // Đã đổi từ string -> number
   name: string;
   regulation: string;
   weight: number;
@@ -83,7 +47,7 @@ interface CoCloMappingRequest {
 }
 
 interface AssessmentCloMappingRequest {
-  assessmentCode: string;
+  assessmentCode: number; // Đã đổi từ string -> number
   cloCode: string;
   weight: number;
 }
@@ -91,19 +55,6 @@ interface AssessmentCloMappingRequest {
 /**
  * --- INTERFACES FOR RESPONSES ---
  */
-
-export interface CourseVersionResponse {
-  versionNumber: number;
-  credits: number;
-  fromDate: string;
-  toDate: string | null;
-  courseId: string;
-  courseName: string;
-  subDepartmentId: string;
-  departmentId: string;
-  departmentName: string;
-  departmentDescription: string;
-}
 
 export interface CourseVersionResponseDetail {
   courseId: string;
@@ -120,7 +71,7 @@ export interface CourseVersionResponseDetail {
   clos: { id: number; cloCode: string; content: string }[];
   assessments: {
     id: number;
-    assessmentCode: string;
+    assessmentCode: number; // Đã đổi từ string -> number
     name: string;
     regulation: string;
     weight: number;
@@ -135,13 +86,65 @@ export interface CourseVersionResponseDetail {
   assessmentCloMappings: {
     cloId: number;
     assessmentId: number;
-    assessmentCode: string;
+    assessmentCode: number; // Đã đổi từ string -> number
     assessmentName: string;
     cloCode: string;
     weight: number;
   }[];
 }
 
+export interface CourseVersionFilterRequest {
+  courseId?: string;
+  versionNumber?: number;
+  credits?: number;
+  courseName?: string;
+  active?: boolean;
+  subDepartmentId?: string;
+  departmentId?: string;
+  educationProgramId?: string;
+}
+
+export interface CourseVersionResponse {
+  versionNumber: number;
+  credits: number;
+  fromDate: string;
+  toDate: string | null;
+  courseId: string;
+  courseName: string;
+  subDepartmentId: string;
+  departmentId: string;
+  departmentName: string;
+  departmentDescription: string;
+}
+
+export interface CourseVersionRequestCreateDetail {
+  courseId: string;
+  name: string;
+  credits: number;
+  fromDate: string;
+  toDate?: string;
+  cos: CoRequest[];
+  clos: CloRequest[];
+  assessments: AssessmentRequest[]; // Interface này đã đổi assessmentCode ở trên
+  coCloMappings: CoCloMappingRequest[];
+  assessmentCloMappings: AssessmentCloMappingRequest[]; // Interface này đã đổi ở trên
+}
+
+export interface CourseVersionRequestUpdateDetail {
+  courseId: string;
+  subDepartmentId: string;
+  versionNumber: number;
+  name: string;
+  credits: number;
+  fromDate: string;
+  toDate?: string;
+  cos: (CoRequest & { id: number | null })[];
+  clos: (CloRequest & { id: number | null })[];
+  // Cập nhật ở đây:
+  assessments: (AssessmentRequest & { id: number | null })[];
+  coCloMappings: CoCloMappingRequest[];
+  assessmentCloMappings: AssessmentCloMappingRequest[];
+}
 /**
  * --- SERVICE IMPLEMENTATION ---
  */

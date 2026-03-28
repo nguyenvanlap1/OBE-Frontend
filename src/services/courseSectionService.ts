@@ -4,61 +4,20 @@ import type { ApiResponse, PageableRequest, PageResponse } from "./api";
 /**
  * --- INTERFACES FOR REQUESTS & RESPONSES ---
  */
-
-export interface CourseSectionResponseDetail {
-  id: string;
-  semesterTerm: number;
-  semesterAcademicYear: string;
-
-  // Thông tin học phần
-  courseId: string;
-  courseVersionName: string;
-  versionNumber: number;
-
-  // Thông tin giảng viên & đơn vị
-  lecturerId: string;
-  lecturerName: string;
-  subDepartmentId: string;
-  subDepartmentName: string;
-
-  /**
-   * Cấu hình các cột điểm của môn học (Header của bảng điểm)
-   */
-  assessmentResponses: {
-    assessmentCode: string; // GK, CK, BT1...
-    name: string;
-    regulation: string;
-    weight: number;
-  }[];
-
-  /**
-   * Danh sách sinh viên và điểm số tương ứng (Body của bảng điểm)
-   */
-  enrollmentResponses: {
-    id: number;
-    studentId: string;
-    studentFullName: string;
-
-    // Chi tiết từng đầu điểm của sinh viên
-    grades: {
-      id: number;
-      assessmentCode: string;
-      score: number | null;
-    }[];
-  }[];
-}
-
 export interface GradeRequest {
-  enrollmentId: string;
-  assessmentCode: string; // GK, CK, BT1...
+  sectionAssessmentCode: number;
   score: number;
 }
 
 export interface GradeResponse {
-  id?: number;
-  assessmentCode: string;
+  id: number;
+  sectionAssessmentCode: number;
   score: number;
-  weight?: number;
+}
+
+export interface EnrollmentRequest {
+  id: number;
+  grades: GradeRequest[];
 }
 
 export interface EnrollmentResponse {
@@ -72,38 +31,91 @@ export interface CourseSectionResponse {
   id: string;
   semesterTerm: number;
   semesterAcademicYear: string;
+
   courseId: string;
   courseVersionName: string;
   versionNumber: number;
+
   lecturerId: string;
   lecturerName: string;
+
   subDepartmentId: string;
   subDepartmentName: string;
 }
 
-export interface CourseSectionCreateRequest {
+export interface CourseSectionResponseDetail {
   id: string;
   semesterTerm: number;
   semesterAcademicYear: string;
+
+  // Course info
   courseId: string;
+  courseVersionName: string;
   versionNumber: number;
+
+  // Lecturer
   lecturerId: string;
+  lecturerName: string;
+
+  // SubDepartment
+  subDepartmentId: string;
+  subDepartmentName: string;
+
+  // Assessments (từ CourseVersion)
+  assessmentResponses: AssessmentResponse[];
+
+  // SectionAssessment (mapping theo lớp)
+  sectionAssessmentResponses: SectionAssessmentResponse[];
+
+  // Danh sách sinh viên + điểm
+  enrollmentResponses: EnrollmentResponse[];
 }
 
-export type CourseSectionUpdateRequest = CourseSectionCreateRequest;
+export interface AssessmentResponse {
+  assessmentCode: number;
+  name: string;
+  regulation: string;
+  weight: number;
+}
+
+export interface SectionAssessmentResponse {
+  id: number;
+  sectionAssessmentCode: number;
+}
 
 export interface CourseSectionFilterRequest {
   id?: string;
   semesterTerm?: number;
   semesterAcademicYear?: string;
+
+  // Course info
   courseId?: string;
   courseVersionName?: string;
   versionNumber?: number;
+
+  // Lecturer
   lecturerId?: string;
   lecturerName?: string;
+
+  // SubDepartment
   subDepartmentId?: string;
   subDepartmentName?: string;
 }
+
+export interface CourseSectionBaseRequest {
+  id: string;
+  semesterTerm: number;
+  semesterAcademicYear: string;
+
+  courseId: string;
+  versionNumber: number;
+
+  lecturerId: string;
+}
+
+export type CourseSectionCreateRequest = CourseSectionBaseRequest;
+
+export type CourseSectionUpdateRequest = CourseSectionBaseRequest;
 
 /**
  * --- SERVICE IMPLEMENTATION ---

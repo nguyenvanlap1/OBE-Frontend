@@ -89,7 +89,7 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
           );
           return {
             cloCode: clo?.cloCode || "",
-            assessmentCode: asm?.assessmentCode || "",
+            assessmentCode: asm?.assessmentCode || 0,
             weight: m.weight,
           };
         })

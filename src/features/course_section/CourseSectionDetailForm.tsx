@@ -60,9 +60,14 @@ const CourseSectionDetailForm = ({ data }: CourseSectionDetailFormProps) => {
         ? await courseSectionService.create(payload)
         : await courseSectionService.update(payload.id, payload);
 
+      if (response.data) {
+        setFormData(response.data);
+      }
       setIsNew(false);
 
       if (response.status === 200 || response.status === 201) {
+        console.log("Dữ liệu nhận về");
+        logData(response);
         toast.success("Cập nhật thông tin lớp học phần thành công!");
         setIsEditing(false);
       }
