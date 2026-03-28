@@ -8,6 +8,7 @@ import courseSectionService, {
   type CourseSectionResponse,
   type CourseSectionUpdateRequest,
 } from "../../services/courseSectionService";
+import CourseGradeOverview from "./CourseGradeOverview";
 
 interface CourseSectionDetailFormProps {
   data: CourseSectionResponse;
@@ -191,9 +192,45 @@ const CourseSectionDetailForm = ({ data }: CourseSectionDetailFormProps) => {
         </section>
       </div>
 
+      {/* 4. Cấu trúc khung điểm (Kết nối với dữ liệu bảng điểm) */}
+      {!isNew && (
+        <section className="space-y-4 pt-4">
+          <div className="font-bold text-lg border-l-4 border-blue-600 pl-3 mb-4 text-blue-800 flex justify-between items-center">
+            <span>4. Cấu trúc khung điểm & Đánh giá</span>
+            <span className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-1 rounded">
+              Dữ liệu thời gian thực
+            </span>
+          </div>
+
+          {/* Nhúng component hiển thị điểm đã viết ở bước trước */}
+          <div className="ml-0">
+            <CourseGradeOverview courseSectionId={formData.id} />
+          </div>
+
+          <div className="ml-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
+            <p className="font-semibold mb-1">💡 Lưu ý cho Giảng viên:</p>
+            <ul className="list-disc ml-5 space-y-1">
+              <li>
+                Cấu trúc điểm được lấy từ phiên bản học phần{" "}
+                <strong>{formData.courseVersionName}</strong>.
+              </li>
+              <li>
+                Để thay đổi cột điểm hoặc trọng số, vui lòng cập nhật tại mục
+                Quản lý Đề cương chi tiết.
+              </li>
+              <li>
+                Sau khi cập nhật giảng viên, hãy nhấn{" "}
+                <strong>Lưu thay đổi</strong> để hệ thống đồng bộ quyền nhập
+                điểm.
+              </li>
+            </ul>
+          </div>
+        </section>
+      )}
       {/* Footer */}
       <div className="mt-20 pt-8 border-t border-slate-100 text-sm text-slate-400 text-center italic">
-        Dữ liệu được trích xuất từ hệ thống quản lý học thuật OBE
+        Dữ liệu được trích xuất từ hệ thống quản lý học thuật OBE -{" "}
+        {new Date().getFullYear()}
       </div>
     </div>
   );

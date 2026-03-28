@@ -43,24 +43,8 @@ export interface CourseSectionResponse {
   subDepartmentName: string;
 }
 
-export interface CourseSectionResponseDetail {
+export interface CourseSectionGradeResponse {
   id: string;
-  semesterTerm: number;
-  semesterAcademicYear: string;
-
-  // Course info
-  courseId: string;
-  courseVersionName: string;
-  versionNumber: number;
-
-  // Lecturer
-  lecturerId: string;
-  lecturerName: string;
-
-  // SubDepartment
-  subDepartmentId: string;
-  subDepartmentName: string;
-
   // Assessments (từ CourseVersion)
   assessmentResponses: AssessmentResponse[];
 
@@ -136,8 +120,16 @@ const courseSectionService = {
   // 10. Lấy chi tiết lớp học phần (bao gồm cấu hình điểm và DS sinh viên)
   getDetail: async (
     id: string,
-  ): Promise<ApiResponse<CourseSectionResponseDetail>> => {
+  ): Promise<ApiResponse<CourseSectionResponse>> => {
     const response = await api.get(`/course-sections/${id}`);
+    return response.data;
+  },
+
+  // Lấy chi tiết bảng điểm của lớp học phần
+  getGrade: async (
+    id: string,
+  ): Promise<ApiResponse<CourseSectionGradeResponse>> => {
+    const response = await api.get(`/course-sections/${id}/grades`);
     return response.data;
   },
 
@@ -172,7 +164,7 @@ const courseSectionService = {
   addStudent: async (
     sectionId: string,
     studentId: string,
-  ): Promise<ApiResponse<void>> => {
+  ): Promise<ApiResponse<EnrollmentResponse>> => {
     const response = await api.post(
       `/course-sections/${sectionId}/students/${studentId}`,
     );
@@ -191,30 +183,31 @@ const courseSectionService = {
   },
 
   // 7. Cập nhật danh sách điểm cho một sinh viên cụ thể
-  updateStudentGrades: async (
+  updateStudentGradesBatch: async (
     sectionId: string,
-    studentId: string,
-    grades: GradeRequest[],
-  ): Promise<ApiResponse<void>> => {
+    enrollmentId: string,
+    data: EnrollmentRequest,
+  ): Promise<ApiResponse<EnrollmentResponse>> => {
     const response = await api.put(
-      `/course-sections/${sectionId}/students/${studentId}/grades`,
-      grades,
+      `/course-sections/${sectionId}/students/${enrollmentId}/grades-batch`,
+      data,
     );
     return response.data;
   },
 
-  // 8. Đồng bộ khung điểm cho toàn bộ lớp (Sync-grades)
-  syncGrades: async (sectionId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(
-      `/course-sections/${sectionId}/sync-grades`,
-    );
-    return response.data;
-  },
-
-  // 9. Kiểm tra tính nhất quán của điểm số (Validate)
-  validateGrades: async (sectionId: string): Promise<ApiResponse<void>> => {
-    const response = await api.get(
-      `/course-sections/${sectionId}/validate-grades`,
+  // 8. Cập nhật một đầu điểm đơn lẻ (Phục vụ AG Grid)
+  updateSingleGrade: async (
+    enrollmentId: number,
+    saCode: number,
+    score: number,
+  ): Promise<ApiResponse<EnrollmentResponse>> => {
+    // Gọi đến Endpoint: PATCH /api/course-sections/enrollments/{enrollmentId}/grades/{saCode}?score={score}
+    const response = await api.patch(
+      `/course-sections/enrollments/${enrollmentId}/grades/${saCode}`,
+      null, // Body để trống vì dùng param
+      {
+        params: { score },
+      },
     );
     return response.data;
   },
