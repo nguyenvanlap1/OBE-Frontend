@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import authService from "./services/authService";
+import authService, { type UserMeResponse } from "./services/authService";
 import MainLayout from "./components/layout/MainLayout";
 import LoginPage from "./pages/login/LoginPage";
 import HomePage from "./pages/dashboard/HomePage";
 import UserManagementPage from "./pages/user_management/UserManagementPage";
-import PermissionTree from "./pages/permision/PermissionTree";
 import CategoryManagement from "./pages/category_management/CategoryManagement";
 import RealPermissionTree from "./pages/permision/RealPermissionTree";
 import DepartmentPage from "./features/department/DepartmentList";
 import { ToastContainer } from "react-toastify";
 import SubDepartmentPage from "./features/department/SubDepartmentList";
+import ProfilePage from "./pages/profile_page/ProfilePage";
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserMeResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function App() {
     authService
       .getCurrentUser()
       .then((res) => {
-        setUser(res); // Lưu username, roles vào state
+        setUser(res.data); // Lưu username, roles vào state
         console.log(res);
       })
       .catch(() => {
@@ -41,7 +41,9 @@ export default function App() {
 
         {/* Nếu có user thì cho vào, không thì đá về login */}
         <Route
-          element={user ? <MainLayout /> : <Navigate to="/login" replace />}
+          element={
+            user ? <MainLayout user={user} /> : <Navigate to="/login" replace />
+          }
         >
           <Route path="/" element={<HomePage />} />
           <Route path="/users" element={<UserManagementPage />}></Route>
@@ -52,6 +54,7 @@ export default function App() {
             path="/category-management"
             element={<CategoryManagement />}
           ></Route>{" "}
+          <Route path="/profile" element={<ProfilePage user={user} />}></Route>
           {/* Các route con khác */}
         </Route>
       </Routes>

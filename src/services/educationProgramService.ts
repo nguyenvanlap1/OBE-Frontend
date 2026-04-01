@@ -94,6 +94,22 @@ export interface EducationProgramResponseDetail {
   }[];
 }
 
+// Interface cho từng học phần trong chương trình
+export interface ProgramCourseDetailResponse {
+  courseId: string;
+  courseVersionNumber: number;
+  courseVersionName: string;
+  courseCredit: number;
+  knowledgeBlockId: string | null;
+  knowledgeBlockName: string | null;
+}
+
+// Interface cho danh sách học phần của một chương trình
+export interface ProgramCourseDetailListResponse {
+  id: string; // Đây là programId
+  programCourseDetailResponses: ProgramCourseDetailResponse[];
+}
+
 // --- Service Implementation ---
 
 const educationProgramService = {
@@ -139,42 +155,66 @@ const educationProgramService = {
     return response.data;
   },
 
-  // 6. Thêm học phần vào chương trình (Query Params)
-  addCourse: async (
-    programId: string,
-    courseId: string,
-    versionNumber?: number,
-  ): Promise<ApiResponse<void>> => {
-    const response = await api.post(
-      `/education-programs/${programId}/courses`,
-      null,
-      {
-        params: { courseId, versionNumber },
-      },
-    );
-    return response.data;
-  },
-
-  // 7. Xóa học phần khỏi chương trình (Query Params)
-  removeCourse: async (
-    programId: string,
-    courseId: string,
-    versionNumber: number,
-  ): Promise<ApiResponse<void>> => {
-    const response = await api.delete(
-      `/education-programs/${programId}/courses`,
-      {
-        params: { courseId, versionNumber },
-      },
-    );
-    return response.data;
-  },
-
   updateDetail: async (
     id: string,
     data: EducationProgramRequestUpdateDetail,
   ): Promise<ApiResponse<EducationProgramResponseDetail>> => {
     const response = await api.put(`/education-programs/${id}/detail`, data);
+    return response.data;
+  },
+
+  addCourse: async (
+    programId: string,
+    courseId: string,
+    versionNumber?: number,
+    knowledgeBlockId?: string,
+  ): Promise<ApiResponse<ProgramCourseDetailResponse>> => {
+    const response = await api.post(
+      `/education-programs/${programId}/courses`,
+      null,
+      {
+        params: { courseId, versionNumber, knowledgeBlockId },
+      },
+    );
+    return response.data;
+  },
+
+  // 7. Xóa học phần khỏi chương trình
+  // Cập nhật: Thường chỉ cần courseId vì đã có Unique Constraint trong DB
+  removeCourse: async (
+    programId: string,
+    courseId: string,
+  ): Promise<ApiResponse<void>> => {
+    const response = await api.delete(
+      `/education-programs/${programId}/courses`,
+      {
+        params: { courseId },
+      },
+    );
+    return response.data;
+  },
+
+  // 8. Lấy danh sách học phần của chương trình
+  getCourses: async (
+    programId: string,
+  ): Promise<ApiResponse<ProgramCourseDetailListResponse>> => {
+    const response = await api.get(`/education-programs/${programId}/courses`);
+    return response.data;
+  },
+
+  // 9. Cập nhật Khối kiến thức cho học phần (PATCH)
+  updateCourseKnowledgeBlock: async (
+    programId: string,
+    courseId: string,
+    knowledgeBlockId: string,
+  ): Promise<ApiResponse<ProgramCourseDetailResponse>> => {
+    const response = await api.patch(
+      `/education-programs/${programId}/courses/${courseId}/knowledge-block`,
+      null,
+      {
+        params: { knowledgeBlockId },
+      },
+    );
     return response.data;
   },
 };

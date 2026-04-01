@@ -1,20 +1,20 @@
 import api from "./api";
 import type { ApiResponse } from "./api";
 
-// --- Interface cho Permission ---
+/**
+ * Interface đồng bộ hoàn toàn với PermissionTreeResponse của Backend
+ */
 export interface PermissionResponse {
-  id: string;
-  name: string;
-  description: string;
-  allowedScopes: string[];
-  children: PermissionResponse[]; // Cấu trúc đệ quy để vẽ cây
+  id: string; // ID (VD: "USER" hoặc "USER_CREATE")
+  name: string; // Tên hiển thị tiếng Việt
+  description: string; // Mô tả chi tiết
+  allowedScopes?: string[]; // Danh sách các Scope (có thể null ở node nhóm)
+  children: PermissionResponse[]; // Node con (rỗng nếu là quyền cụ thể)
 }
 
-// --- Permission Service ---
 const permissionService = {
   /**
-   * Lấy sơ đồ cây phân quyền hoàn chỉnh
-   * Dùng để hiển thị trong các trang quản lý vai trò (Roles) hoặc phân quyền người dùng
+   * Lấy sơ đồ cây phân quyền (đã được gom nhóm theo Module từ Backend)
    */
   getTree: async (): Promise<ApiResponse<PermissionResponse[]>> => {
     const response = await api.get("/permissions/tree");
@@ -22,11 +22,16 @@ const permissionService = {
   },
 
   /**
-   * Lấy danh sách phẳng (nếu cần dùng cho các component đơn giản như Select/Dropdown)
+   * Lấy danh sách phẳng (Dùng cho dropdown hoặc filter nhanh)
+   * Ở đây mình map lại từ Tree để tránh viết thêm API mới ở Backend
    */
-  getAll: async (): Promise<ApiResponse<PermissionResponse[]>> => {
-    const response = await api.get("/permissions/all");
-    return response.data;
+  getAllFlat: async (): Promise<PermissionResponse[]> => {
+    const res =
+      await api.get<ApiResponse<PermissionResponse[]>>("/permissions/tree");
+    if (!res.data.data) return [];
+
+    // Làm phẳng Tree thành danh sách các quyền cụ thể
+    return res.data.data.flatMap((module) => module.children);
   },
 };
 

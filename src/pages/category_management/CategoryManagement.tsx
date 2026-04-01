@@ -27,6 +27,11 @@ import CourseSectionList from "../../features/course_section/CourseSectionList";
 import CourseSectionDetailForm from "../../features/course_section/CourseSectionDetailForm";
 import LecturerList from "../../features/lecture/LecturerList";
 import LecturerDetailForm from "../../features/lecture/LecturerDetailForm";
+import AccountList from "../../features/account/AccountList";
+import AccountDetailForm from "../../features/account/AccountDetailForm";
+import PermissionTree from "../../features/permision/PermissionTree";
+import RoleList from "../../features/role/RoleList";
+import RoleDetailForm from "../../features/role/RoleDetailForm";
 
 const initialJson: IJsonModel = {
   global: {
@@ -352,6 +357,52 @@ const App = () => {
           ></EducationProgramList>
         );
 
+      case "account_list":
+        return (
+          <AccountList
+            onViewDetail={(idTabset, nametab, data, labels) => {
+              onOpenDetail(
+                idTabset,
+                nametab,
+                data,
+                labels,
+                "account_detail_comp",
+              );
+            }}
+            onCreate={() => {
+              const newAcount = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "account",
+                "Tài khoảng mới",
+                newAcount,
+                {},
+                "account_detail_comp",
+              );
+            }}
+          ></AccountList>
+        );
+
+      case "role_list":
+        return (
+          <RoleList
+            onViewDetail={(idTabset, nametab, data, labels) => {
+              onOpenDetail(idTabset, nametab, data, labels, "role_detail_comp");
+            }}
+            onCreate={() => {
+              const newAcount = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "role",
+                "Vai trò mới",
+                newAcount,
+                {},
+                "role_detail_comp",
+              );
+            }}
+          />
+        );
+
+      case "permission_list":
+        return <PermissionTree />;
       //-----detail comp ------
 
       case "course_detail_comp":
@@ -383,6 +434,12 @@ const App = () => {
 
       case "student_detail_comp":
         return <StudentDetailForm data={config.data} />;
+
+      case "role_detail_comp":
+        return <RoleDetailForm data={config.data} />;
+
+      case "account_detail_comp":
+        return <AccountDetailForm data={config.data} />;
 
       case "detail_comp":
         return (

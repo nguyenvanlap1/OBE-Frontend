@@ -9,6 +9,7 @@ import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
 import logData from "../../utils/logData";
 import MappingMatrix2 from "../../components/common/MappingMatrix2";
+import ProgramCourseOverview from "./ProgramCourseOverview";
 
 interface Props {
   data: EducationProgramResponseDetail;
@@ -122,7 +123,6 @@ const EducationProgramDetailForm = ({ data }: Props) => {
           {isEditing ? "Lưu" : "Sửa"}
         </button>
       </div>
-
       {/* INFO */}
       <div className="space-y-3">
         <div>
@@ -167,7 +167,6 @@ const EducationProgramDetailForm = ({ data }: Props) => {
           )}
         </div>
       </div>
-
       {/* PO */}
       <UniversalTable
         title="PO - Mục tiêu đào tạo"
@@ -177,7 +176,6 @@ const EducationProgramDetailForm = ({ data }: Props) => {
         isEditing={isEditing}
         onDataChange={(d) => handleChange("pos", d)}
       />
-
       {/* PLO */}
       <UniversalTable
         title="PLO - Chuẩn đầu ra"
@@ -187,7 +185,6 @@ const EducationProgramDetailForm = ({ data }: Props) => {
         isEditing={isEditing}
         onDataChange={(d) => handleChange("plos", d)}
       />
-
       {/* MAPPING */}
       {/* MAPPING */}
       <MappingMatrix2
@@ -214,6 +211,12 @@ const EducationProgramDetailForm = ({ data }: Props) => {
           handleChange("ploPoMappings", apiFormat);
         }}
       />
+      {/* --- PHẦN MỚI THÊM VÀO ĐÂY --- */}
+      <hr className="my-10 border-gray-200" />{" "}
+      {/* Đường kẻ phân cách cho đẹp */}
+      <div className="mt-8">
+        <ProgramCourseOverview programId={formData.id} />
+      </div>
     </div>
   );
 };

@@ -12,6 +12,7 @@ import type {
 import courseVersionService from "../../services/courseVersionService";
 import MappingMatrix2 from "../../components/common/MappingMatrix2";
 import MappingMatrix3 from "../../components/common/MappingMatrix3";
+import PloCoMappingStandalone from "./PloCoMappingStandalone";
 
 interface CourseDetailFormProps {
   data: CourseVersionResponseDetail;
@@ -315,7 +316,7 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
       />
       {/* 8. Ma trận mapping Assessment - CLO */}
       <MappingMatrix3
-        title="8. Ma trận mapping Assessment - CLO"
+        title="9. Ma trận mapping Assessment - CLO"
         // Ở đây mình lấy cả Code và Name để hiển thị cho rõ
         rows={formData.clos.map((p) => ({
           id: p.id,
@@ -342,6 +343,11 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
           }));
           handleChange("assessmentCloMappings", apiFormat);
         }}
+      />
+      <PloCoMappingStandalone
+        courseId={formData.courseId}
+        title="8. Ma trận mapping CO-PLO"
+        courseVersion={formData.versionNumber}
       />
     </div>
   );

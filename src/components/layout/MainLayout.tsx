@@ -1,54 +1,55 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import authService from "../../services/authService";
+import authService, { type UserMeResponse } from "../../services/authService";
 
-export default function MainLayout() {
+export default function MainLayout({ user }: { user: UserMeResponse }) {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await authService.logout();
+    navigate("/login");
+  };
+
   return (
-    <div className="flex bg-slate-50 h-screen overflow-hidden">
-      {/* Sidebar - Bỏ fixed, để nó nằm tự nhiên trong flex */}
-      <Sidebar
-        onAddPage={function (id: string, name: string): void {
-          throw new Error("Function not implemented.");
-        }}
-      />
+    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900">
+      <Sidebar user={user} onAddPage={() => {}} />
 
-      {/* Nội dung chính - Chiếm phần còn lại */}
-      <main className="flex-1 flex flex-col min-w-0 bg-white">
-        {/* Header */}
-        <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
-          <div className="text-slate-500 text-[13px] font-medium">
-            Hệ thống quản lý đào tạo /{" "}
-            <span className="text-slate-900 font-bold tracking-tight">
-              Bảng điều khiển
-            </span>
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Header Tinh Gọn */}
+        <header className="h-9 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-slate-400">Hệ thống quản lý đào tạo /</span>
+            <span className="font-semibold text-blue-600">Bảng điều khiển</span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-slate-100 text-slate-700 rounded border border-slate-200 flex items-center justify-center font-bold text-xs">
-                AD
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-[12px] font-bold leading-none">
+                  {user.fullName}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-1 uppercase font-black">
+                  {user.isSystemAccount ? "Admin" : "Giảng viên"}
+                </p>
               </div>
-              <span className="text-[13px] text-slate-600">
-                Xin chào,{" "}
-                <span className="font-bold text-slate-900">Admin</span>
-              </span>
+              <div className="w-8 h-8 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-[11px]">
+                {user.fullName.split(" ").pop()?.charAt(0)}
+              </div>
             </div>
+
             <button
-              className="ml-4 text-[13px] font-bold text-red-600 hover:text-red-700 transition-colors"
-              onClick={() => {
-                authService.logout();
-                window.location.href = "/login";
-              }}
+              onClick={handleLogout}
+              className="text-[12px] font-bold text-slate-400 hover:text-red-500 transition-colors uppercase tracking-tight"
             >
-              Đăng xuất
+              Thoát
             </button>
           </div>
         </header>
 
-        {/* Khu vực nội dung - Xóa max-w-7xl để FlexLayout bung lụa */}
-        <div className="flex-1 overflow-hidden relative">
+        {/* Viewport Content */}
+        <section className="flex-1 overflow-auto bg-slate-50/50">
           <Outlet />
-        </div>
+        </section>
       </main>
     </div>
   );

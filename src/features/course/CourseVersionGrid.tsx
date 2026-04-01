@@ -286,6 +286,9 @@ export const CourseVersionGrid = ({
               cacheBlockSize={pageSize}
               pagination={true}
               paginationPageSize={pageSize}
+              // THÊM 2 DÒNG NÀY ĐỂ COPY ĐƯỢC
+              enableCellTextSelection={true}
+              ensureDomOrder={true}
             />
           </div>
         </div>

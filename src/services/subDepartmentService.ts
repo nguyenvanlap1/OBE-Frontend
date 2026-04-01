@@ -61,6 +61,15 @@ const subDepartmentService = {
     const response = await api.delete(`/sub-departments/${id}`);
     return response.data;
   },
+
+  getByDepartmentId: async (
+    departmentId: string,
+  ): Promise<ApiResponse<SubDepartmentResponse[]>> => {
+    const response = await api.get(
+      `/sub-departments/department/${departmentId}`,
+    );
+    return response.data;
+  },
 };
 
 export default subDepartmentService;

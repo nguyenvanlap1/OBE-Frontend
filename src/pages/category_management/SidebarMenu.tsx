@@ -8,6 +8,9 @@ import {
   Calendar,
   Presentation,
   UserCog,
+  ShieldCheck,
+  KeyRound,
+  Fingerprint,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
@@ -48,6 +51,22 @@ const SidebarMenu = ({
       id: "education_program_list",
       name: "Quản lý chương trình đào tạo",
       icon: GraduationCap,
+    },
+    {
+      id: "account_list",
+      name: "Quản lý Tài khoản",
+      icon: ShieldCheck,
+    },
+    // --- BỔ SUNG QUẢN LÝ PHÂN QUYỀN TẠI ĐÂY ---
+    {
+      id: "role_list",
+      name: "Quản lý Vai trò",
+      icon: KeyRound,
+    },
+    {
+      id: "permission_list",
+      name: "Danh mục Quyền",
+      icon: Fingerprint,
     },
   ];
 
