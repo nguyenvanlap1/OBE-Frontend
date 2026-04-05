@@ -1,12 +1,16 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ColDef } from "ag-grid-community";
-import subDepartmentService, {
-  type SubDepartmentFilterRequest,
-  type SubDepartmentRequest,
-  type SubDepartmentResponse,
-} from "../../services/subDepartmentService";
+
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
-import departmentService from "../../services/departmentService";
+import departmentService, {
+  type DepartmentSummaryResponse,
+} from "../department/departmentService";
+import type {
+  SubDepartmentFilterRequest,
+  SubDepartmentRequest,
+  SubDepartmentResponse,
+} from "./subDepartmentService";
+import subDepartmentService from "./subDepartmentService";
 
 interface SubDepartmentListProps {
   onViewDetail?: (
@@ -16,9 +20,31 @@ interface SubDepartmentListProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     labels: any,
   ) => void;
+  onCreate: () => void;
 }
 
-const SubDepartmentList = ({ onViewDetail }: SubDepartmentListProps) => {
+const SubDepartmentList = ({
+  onViewDetail,
+  onCreate,
+}: SubDepartmentListProps) => {
+  // 1. Đổi state thành mảng Object
+  const [departments, setDepartments] = useState<DepartmentSummaryResponse[]>(
+    [],
+  );
+
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const res = await departmentService.getAllSummary();
+        if (res.data) {
+          setDepartments(res.data); // Lưu nguyên Object {id, name}
+        }
+      } catch (error) {
+        console.error("Lỗi tải danh sách khoa", error);
+      }
+    };
+    fetchDropdownData();
+  }, []);
   // 1. Định nghĩa các cột cho bảng Bộ môn
   const columnDefs = useMemo<ColDef<SubDepartmentResponse>[]>(
     () => [
@@ -74,19 +100,21 @@ const SubDepartmentList = ({ onViewDetail }: SubDepartmentListProps) => {
       SubDepartmentRequest,
       SubDepartmentFilterRequest
     >
+      title="Quản lý bộ môn"
+      description="Hệ thống quản lý dữ liệu OBE"
       columnDefs={columnDefs}
       fetchData={subDepartmentService.search}
       onUpdate={async (data) => {
         const res = await subDepartmentService.update(data.id, data);
         return res.data;
       }}
-      onDelete={departmentService.delete}
+      onDelete={subDepartmentService.delete}
       onViewDetail={(data) => {
         // nếu muốn lấy thêm chi tiết thì fetch ở đây rồi truyền data khác vào
         onViewDetail?.("subDepartment", data.name, data, subDepartmentLabels);
         console.log("View data: " + data);
       }}
-      title={""}
+      onCreate={onCreate}
     ></InfiniteGrid>
   );
 };

@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import type { ColDef } from "ag-grid-community";
-import courseSectionService from "../../services/courseSectionService";
+import courseSectionService from "./courseSectionService";
 import type {
   CourseSectionFilterRequest,
   CourseSectionUpdateRequest,
   CourseSectionResponse,
-} from "../../services/courseSectionService";
+} from "./courseSectionService";
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
 
 interface CourseSectionListProps {

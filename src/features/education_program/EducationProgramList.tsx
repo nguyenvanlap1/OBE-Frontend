@@ -5,8 +5,11 @@ import educationProgramService, {
   type EducationProgramFilterRequest,
   type EducationProgramRequest,
   type EducationProgramResponse,
-} from "../../services/educationProgramService";
+} from "./educationProgramService";
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
+import type { AxiosError } from "axios";
+import type { ApiResponse } from "../../services/api";
+import { toast } from "react-toastify";
 
 interface EducationProgramListProps {
   onViewDetail?: (
@@ -17,9 +20,13 @@ interface EducationProgramListProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     labels: any,
   ) => void;
+  onCreate: () => void;
 }
 
-const EducationProgramList = ({ onViewDetail }: EducationProgramListProps) => {
+const EducationProgramList = ({
+  onViewDetail,
+  onCreate,
+}: EducationProgramListProps) => {
   // 1. Cấu hình các cột cho AG Grid
   // 1. Cấu hình các cột cho AG Grid
   const columnDefs = useMemo<ColDef<EducationProgramResponse>[]>(
@@ -123,6 +130,7 @@ const EducationProgramList = ({ onViewDetail }: EducationProgramListProps) => {
           .then((res) => res.data);
       }}
       onDelete={educationProgramService.delete}
+      onCreate={onCreate}
       onViewDetail={async (data) => {
         try {
           // Khi nhấn View, ta fetch Detail để lấy đầy đủ PO, PLO, Mappings
@@ -134,7 +142,8 @@ const EducationProgramList = ({ onViewDetail }: EducationProgramListProps) => {
             labels,
           );
         } catch (error) {
-          console.error("Lỗi khi lấy chi tiết CTĐT:", error);
+          const err = error as AxiosError<ApiResponse<null>>;
+          toast.error(err.message);
         }
       }}
       pageSize={15}

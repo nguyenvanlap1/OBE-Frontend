@@ -121,8 +121,9 @@ const PloCoMappingStandalone = ({
           return [...filtered, res.data];
         });
       }
-    } catch (error) {
-      toast.error("Không thể lưu trọng số");
+    } catch (error: unknown) {
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message);
     }
   };
 

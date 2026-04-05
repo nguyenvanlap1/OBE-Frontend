@@ -14,7 +14,7 @@ import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
 import educationProgramService, {
   type ProgramCourseDetailListResponse,
-} from "../../services/educationProgramService";
+} from "./educationProgramService";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -74,7 +74,7 @@ const ProgramCourseTableAgGrid: React.FC<Props> = ({
       }
     } catch (err: unknown) {
       const error = err as AxiosError<ApiResponse<null>>;
-      toast.error(error.response?.data?.message || "Không thể thêm học phần.");
+      toast.error(error.message || "Không thể thêm học phần.");
     } finally {
       setIsAdding(false);
     }

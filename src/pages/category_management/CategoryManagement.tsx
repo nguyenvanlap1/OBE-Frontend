@@ -12,10 +12,10 @@ import SidebarMenu from "./SidebarMenu";
 import Introduction from "./Introduction";
 import DepartmentList from "../../features/department/DepartmentList";
 import DynamicEntityForm from "../../components/common/DynamicEntityForm";
-import SubDepartmentList from "../../features/department/SubDepartmentList";
+import SubDepartmentList from "../../features/sub_department/SubDepartmentList";
 import CourseList from "../../features/course/CourseList";
 import CourseDetailForm from "../../features/course/CourseDetailForm";
-import SchoolYearList from "../../features/school_year_list/SchoolYearList";
+import SchoolYearList from "../../features/school_year/SchoolYearList";
 import EducationProgramList from "../../features/education_program/EducationProgramList";
 import EducationProgramDetailForm from "../../features/education_program/EducationProgramDetailForm";
 import StudentClassList from "../../features/student_class_list/StudentClassList";
@@ -32,6 +32,8 @@ import AccountDetailForm from "../../features/account/AccountDetailForm";
 import PermissionTree from "../../features/permision/PermissionTree";
 import RoleList from "../../features/role/RoleList";
 import RoleDetailForm from "../../features/role/RoleDetailForm";
+import DepartmentDetailForm from "../../features/department/DepartmentDetailForm";
+import SubDepartmentDetailForm from "../../features/sub_department/SubDepartmentDetailForm";
 
 const initialJson: IJsonModel = {
   global: {
@@ -189,7 +191,23 @@ const App = () => {
         return (
           <DepartmentList
             onViewDetail={(idTabset, nameTab, data, labels) => {
-              onOpenDetail(idTabset, nameTab, data, labels);
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                labels,
+                "department_detail_comp",
+              );
+            }}
+            onCreate={() => {
+              const newDepartment = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "department",
+                "Khoa mới",
+                newDepartment,
+                {},
+                "department_detail_comp",
+              );
             }}
           />
         );
@@ -198,7 +216,23 @@ const App = () => {
         return (
           <SubDepartmentList
             onViewDetail={(idTabset, nameTab, data, labels) => {
-              onOpenDetail(idTabset, nameTab, data, labels);
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                labels,
+                "sub_department_detail_comp",
+              );
+            }}
+            onCreate={function (): void {
+              const newSubDepartment = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "subdepartment",
+                "Bộ môn mới",
+                newSubDepartment,
+                {},
+                "sub_department_detail_comp",
+              );
             }}
           />
         );
@@ -325,13 +359,7 @@ const App = () => {
         );
 
       case "school_year_list": // Thêm case này
-        return (
-          <SchoolYearList
-            onViewDetail={(idTabset, nameTab, data, labels) => {
-              onOpenDetail(idTabset, nameTab, data, labels);
-            }}
-          />
-        );
+        return <SchoolYearList />;
 
       case "semester_list":
         return (
@@ -351,6 +379,16 @@ const App = () => {
                 nametab,
                 data,
                 labels,
+                "education_program_detail_comp",
+              );
+            }}
+            onCreate={function (): void {
+              const educationProgram = { id: `new_${Date.now()}` };
+              onOpenDetail(
+                "education_program",
+                "chương trình đào tạo mới",
+                educationProgram,
+                {},
                 "education_program_detail_comp",
               );
             }}
@@ -404,6 +442,12 @@ const App = () => {
       case "permission_list":
         return <PermissionTree />;
       //-----detail comp ------
+
+      case "department_detail_comp":
+        return <DepartmentDetailForm data={config.data} />;
+
+      case "sub_department_detail_comp":
+        return <SubDepartmentDetailForm data={config.data} />;
 
       case "course_detail_comp":
         // Component hiển thị riêng cho Course (có ma trận CO-CLO)

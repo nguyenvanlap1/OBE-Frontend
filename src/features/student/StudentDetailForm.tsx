@@ -3,12 +3,12 @@ import { Save, Edit2, X } from "lucide-react";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
-import studentService from "../../services/studentService";
+import studentService from "./studentService";
 import type {
   StudentResponse,
   StudentUpdateRequest,
   StudentCreateRequest,
-} from "../../services/studentService";
+} from "./studentService";
 import logData from "../../utils/logData";
 
 interface StudentDetailFormProps {
@@ -95,7 +95,7 @@ const StudentDetailForm = ({ data, onSave }: StudentDetailFormProps) => {
       }
     } catch (error: unknown) {
       const err = error as AxiosError<ApiResponse<null>>;
-      toast.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu");
+      toast.error(err.message || "Có lỗi xảy ra khi lưu");
     }
   };
 

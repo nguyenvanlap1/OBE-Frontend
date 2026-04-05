@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import courseSectionService, {
   type CourseSectionGradeResponse,
-} from "../../services/courseSectionService";
+} from "./courseSectionService";
 import GradeTableAgGrid from "./GradeTableAgGrid";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";

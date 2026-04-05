@@ -1,5 +1,9 @@
-import api from "./api";
-import type { ApiResponse, PageableRequest, PageResponse } from "./api";
+import api from "../../services/api";
+import type {
+  ApiResponse,
+  PageableRequest,
+  PageResponse,
+} from "../../services/api";
 
 // --- Interfaces cho Student (Sinh viên) ---
 export interface StudentResponse {

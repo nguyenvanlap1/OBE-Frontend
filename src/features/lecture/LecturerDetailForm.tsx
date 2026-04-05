@@ -26,6 +26,7 @@ const LecturerDetailForm = ({ data, onSave }: LecturerDetailFormProps) => {
     fullName: data.fullName || "",
     gender: data.gender || "Nam",
     subDepartmentIds: data.subDepartmentIds || [],
+    subDepartmentNames: data.subDepartmentNames || [], // Thêm dòng này
   }));
 
   // State tạm để nhập mã bộ môn mới
@@ -81,9 +82,7 @@ const LecturerDetailForm = ({ data, onSave }: LecturerDetailFormProps) => {
       }
     } catch (error: unknown) {
       const err = error as AxiosError<ApiResponse<null>>;
-      toast.error(
-        err.response?.data?.message || "Có lỗi xảy ra khi lưu giảng viên",
-      );
+      toast.error(err.message || "Có lỗi xảy ra khi lưu giảng viên");
     }
   };
 

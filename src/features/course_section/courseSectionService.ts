@@ -1,5 +1,9 @@
-import api from "./api";
-import type { ApiResponse, PageableRequest, PageResponse } from "./api";
+import api from "../../services/api";
+import type {
+  ApiResponse,
+  PageableRequest,
+  PageResponse,
+} from "../../services/api";
 
 /**
  * --- INTERFACES FOR REQUESTS & RESPONSES ---
@@ -196,15 +200,16 @@ const courseSectionService = {
   },
 
   // 8. Cập nhật một đầu điểm đơn lẻ (Phục vụ AG Grid)
+  // URL mới: PATCH /api/course-sections/{sectionId}/enrollments/{enrollmentId}/grades/{saCode}?score={score}
   updateSingleGrade: async (
+    sectionId: string, // Thêm tham số sectionId
     enrollmentId: number,
     saCode: number,
     score: number,
   ): Promise<ApiResponse<EnrollmentResponse>> => {
-    // Gọi đến Endpoint: PATCH /api/course-sections/enrollments/{enrollmentId}/grades/{saCode}?score={score}
     const response = await api.patch(
-      `/course-sections/enrollments/${enrollmentId}/grades/${saCode}`,
-      null, // Body để trống vì dùng param
+      `/course-sections/${sectionId}/enrollments/${enrollmentId}/grades/${saCode}`,
+      null, // Body để trống vì backend dùng @RequestParam
       {
         params: { score },
       },

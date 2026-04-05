@@ -9,7 +9,7 @@ import CategoryManagement from "./pages/category_management/CategoryManagement";
 import RealPermissionTree from "./pages/permision/RealPermissionTree";
 import DepartmentPage from "./features/department/DepartmentList";
 import { ToastContainer } from "react-toastify";
-import SubDepartmentPage from "./features/department/SubDepartmentList";
+import SubDepartmentPage from "./features/sub_department/SubDepartmentList";
 import ProfilePage from "./pages/profile_page/ProfilePage";
 
 export default function App() {

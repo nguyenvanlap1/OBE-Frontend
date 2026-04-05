@@ -5,7 +5,7 @@ import departmentService, {
   type DepartmentFilterRequest,
   type DepartmentRequest,
   type DepartmentResponse,
-} from "../../services/departmentService";
+} from "./departmentService";
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
 
 interface DepartmentListProps {
@@ -16,9 +16,10 @@ interface DepartmentListProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     labels: any,
   ) => void;
+  onCreate: () => void;
 }
 
-const DepartmentList = ({ onViewDetail }: DepartmentListProps) => {
+const DepartmentList = ({ onViewDetail, onCreate }: DepartmentListProps) => {
   const columnDefs = useMemo<ColDef<DepartmentResponse>[]>(
     () => [
       {
@@ -68,6 +69,7 @@ const DepartmentList = ({ onViewDetail }: DepartmentListProps) => {
         onViewDetail?.("department", data.name, data, labels);
         console.log("View data: " + data);
       }}
+      onCreate={onCreate}
       pageSize={15}
     />
   );

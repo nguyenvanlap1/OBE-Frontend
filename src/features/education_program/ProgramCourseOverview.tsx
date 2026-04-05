@@ -5,7 +5,7 @@ import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
 import educationProgramService, {
   type ProgramCourseDetailListResponse,
-} from "../../services/educationProgramService";
+} from "./educationProgramService";
 import knowledgeBlockService, {
   type KnowledgeBlockResponse,
 } from "../../services/knowledgeBlockService"; // Import service mới

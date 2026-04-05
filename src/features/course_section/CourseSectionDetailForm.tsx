@@ -7,7 +7,7 @@ import logData from "../../utils/logData";
 import courseSectionService, {
   type CourseSectionResponse,
   type CourseSectionUpdateRequest,
-} from "../../services/courseSectionService";
+} from "./courseSectionService";
 import CourseGradeOverview from "./CourseGradeOverview";
 
 interface CourseSectionDetailFormProps {

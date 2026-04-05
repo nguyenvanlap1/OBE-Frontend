@@ -1,5 +1,9 @@
-import api from "./api";
-import type { ApiResponse, PageableRequest, PageResponse } from "./api";
+import type {
+  ApiResponse,
+  PageableRequest,
+  PageResponse,
+} from "../../services/api";
+import api from "../../services/api";
 
 // --- Interface cho SubDepartment (Bộ môn) ---
 export interface SubDepartmentResponse {

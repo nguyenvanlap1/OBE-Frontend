@@ -24,6 +24,7 @@ export interface LecturerRequest {
  */
 
 export interface LecturerResponse {
+  subDepartmentNames: string[];
   id: string;
   fullName: string;
   gender: string;

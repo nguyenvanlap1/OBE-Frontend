@@ -94,7 +94,7 @@ const RoleDetailForm = ({ data, onSave }: RoleDetailFormProps) => {
       }
     } catch (error: unknown) {
       const err = error as AxiosError<ApiResponse<null>>;
-      toast.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu");
+      toast.error(err.message || "Có lỗi xảy ra khi lưu");
     }
   };
 

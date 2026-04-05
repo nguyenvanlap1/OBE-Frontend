@@ -9,6 +9,8 @@ import type {
 } from "../../services/roleService";
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
 import { toast } from "react-toastify";
+import type { AxiosError } from "axios";
+import type { ApiResponse } from "../../services/api";
 
 interface RoleListProps {
   onViewDetail?: (
@@ -101,7 +103,8 @@ const RoleList = ({ onViewDetail, onCreate }: RoleListProps) => {
         } catch (error) {
           // Xử lý lỗi nếu không fetch được dữ liệu
           console.error("Lỗi khi lấy chi tiết vai trò:", error);
-          toast.error("Không thể tải thông tin chi tiết vai trò");
+          const err = error as AxiosError<ApiResponse<null>>;
+          toast.error(err.message);
         }
       }}
       onCreate={onCreate}

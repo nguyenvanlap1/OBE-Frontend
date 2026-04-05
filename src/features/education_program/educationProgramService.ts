@@ -1,5 +1,9 @@
-import api from "./api";
-import type { ApiResponse, PageableRequest, PageResponse } from "./api";
+import api from "../../services/api";
+import type {
+  ApiResponse,
+  PageableRequest,
+  PageResponse,
+} from "../../services/api";
 
 export interface EducationProgramRequest {
   id: string;
@@ -131,6 +135,18 @@ const educationProgramService = {
     });
     return response.data;
   },
+
+  // ... các hàm khác
+
+  // Bổ sung hàm tạo mới kèm chi tiết (PO, PLO, Mapping)
+  createDetail: async (
+    data: EducationProgramRequestUpdateDetail,
+  ): Promise<ApiResponse<EducationProgramResponseDetail>> => {
+    const response = await api.post("/education-programs/create-detail", data);
+    return response.data;
+  },
+
+  // ... các hàm khác
 
   // 3. Lấy chi tiết chương trình (bao gồm PO/PLO/Mapping)
   getById: async (

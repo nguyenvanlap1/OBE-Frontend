@@ -2,7 +2,7 @@ import api, {
   type ApiResponse,
   type PageableRequest,
   type PageResponse,
-} from "./api";
+} from "../../services/api";
 
 // 1. Định nghĩa Interface dựa trên Entity Backend
 export interface SchoolYear {

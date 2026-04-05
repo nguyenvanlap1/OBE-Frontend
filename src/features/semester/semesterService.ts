@@ -2,7 +2,7 @@ import api, {
   type ApiResponse,
   type PageableRequest,
   type PageResponse,
-} from "./api";
+} from "../../services/api";
 
 // 1. Định nghĩa Interface dựa trên SemesterResponse và Request từ Backend
 export interface Semester {

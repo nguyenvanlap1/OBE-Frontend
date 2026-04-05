@@ -1,5 +1,14 @@
-import api from "./api";
-import type { ApiResponse, PageableRequest, PageResponse } from "./api";
+import api from "../../services/api";
+import type {
+  ApiResponse,
+  PageableRequest,
+  PageResponse,
+} from "../../services/api";
+
+export interface DepartmentSummaryResponse {
+  id: string;
+  name: string;
+}
 
 // --- Interface riêng cho Department ---
 export interface DepartmentResponse {
@@ -50,6 +59,13 @@ const departmentService = {
   // 4. Xóa
   delete: async (id: string): Promise<ApiResponse<void>> => {
     const response = await api.delete(`/departments/${id}`);
+    return response.data;
+  },
+
+  getAllSummary: async (): Promise<
+    ApiResponse<DepartmentSummaryResponse[]>
+  > => {
+    const response = await api.get("/departments/all/summary");
     return response.data;
   },
 };

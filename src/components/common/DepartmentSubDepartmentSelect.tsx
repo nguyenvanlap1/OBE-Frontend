@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Building, Landmark } from "lucide-react";
-import departmentService from "../../services/departmentService";
-import subDepartmentService from "../../services/subDepartmentService";
-import type { DepartmentResponse } from "../../services/departmentService";
-import type { SubDepartmentResponse } from "../../services/subDepartmentService";
+import departmentService from "../../features/department/departmentService";
+import type { DepartmentResponse } from "../../features/department/departmentService";
+import type { SubDepartmentResponse } from "../../features/sub_department/subDepartmentService";
+import subDepartmentService from "../../features/sub_department/subDepartmentService";
 
 interface Props {
   selectedDepartmentId: string;

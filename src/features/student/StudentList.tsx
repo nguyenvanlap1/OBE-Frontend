@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import type { ColDef } from "ag-grid-community";
-import studentService from "../../services/studentService";
+import studentService from "./studentService";
 import type {
   StudentFilterRequest,
   StudentUpdateRequest,
   StudentResponse,
-} from "../../services/studentService";
+} from "./studentService";
 import { InfiniteGrid } from "../../components/common/InfiniteGridProps";
 
 interface StudentListProps {

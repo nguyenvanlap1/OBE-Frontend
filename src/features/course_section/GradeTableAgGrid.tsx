@@ -12,10 +12,10 @@ import { toast } from "react-toastify";
 import type {
   CourseSectionGradeResponse,
   GradeResponse,
-} from "../../services/courseSectionService";
+} from "./courseSectionService";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
-import courseSectionService from "../../services/courseSectionService";
+import courseSectionService from "./courseSectionService";
 import type { CellEditRequestEvent } from "ag-grid-community";
 
 // Định nghĩa interface mới kế thừa từ ColDef của AG Grid
@@ -95,7 +95,7 @@ const GradeTableAgGrid: React.FC<Props> = ({
       }
     } catch (err: unknown) {
       const msg = err as AxiosError<ApiResponse<null>>;
-      toast.error(msg.response?.data?.message || "Thêm sinh viên thất bại");
+      toast.error(msg.message || "Thêm sinh viên thất bại");
     } finally {
       setIsAdding(false);
     }
@@ -229,6 +229,7 @@ const GradeTableAgGrid: React.FC<Props> = ({
     try {
       // 2. Gọi API trước
       await courseSectionService.updateSingleGrade(
+        data.id,
         rowData.id,
         saCode,
         val ?? 0,
