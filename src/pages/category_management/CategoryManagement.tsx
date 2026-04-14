@@ -34,6 +34,9 @@ import RoleList from "../../features/role/RoleList";
 import RoleDetailForm from "../../features/role/RoleDetailForm";
 import DepartmentDetailForm from "../../features/department/DepartmentDetailForm";
 import SubDepartmentDetailForm from "../../features/sub_department/SubDepartmentDetailForm";
+import CourseVersionWorkflowDetail from "../../features/camunda_task/CourseVersionWorkflowDetail";
+import WorkflowInvolvedList from "../../features/camunda_task/WorkflowInvolvedList";
+import StatisticsPage from "../statistics/StatisticsPage";
 
 const initialJson: IJsonModel = {
   global: {
@@ -497,6 +500,28 @@ const App = () => {
             }}
           />
         );
+
+      // ----- Workflow Section -----
+      case "course_version_workflow_list":
+        return (
+          <WorkflowInvolvedList
+            onViewDetail={(idTabset, nameTab, data) => {
+              onOpenDetail(
+                idTabset,
+                nameTab,
+                data,
+                {},
+                "course_version_workflow_detail_comp",
+              );
+            }}
+          />
+        );
+
+      case "course_version_workflow_detail_comp":
+        return <CourseVersionWorkflowDetail data={config.data} />;
+
+      case "statistics_obe":
+        return <StatisticsPage />;
 
       default:
         return (

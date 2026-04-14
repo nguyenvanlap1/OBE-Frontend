@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   KeyRound,
   Fingerprint,
+  BarChart3,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
@@ -68,6 +69,16 @@ const SidebarMenu = ({
       name: "Danh mục Quyền",
       icon: Fingerprint,
     },
+    {
+      id: "statistics_obe",
+      name: "Thống kê OBE",
+      icon: BarChart3,
+    },
+    // {
+    //   id: "course_version_workflow_list",
+    //   name: "Nhiệm vụ của tôi",
+    //   icon: GitPullRequest,
+    // },
   ];
 
   return (

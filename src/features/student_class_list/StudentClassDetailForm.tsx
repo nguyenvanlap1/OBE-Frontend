@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Save, Edit2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Save, Edit2, Upload, FileDown } from "lucide-react";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
@@ -8,6 +8,7 @@ import studentClassService, {
   type StudentClassResponse,
   type StudentClassUpdateRequest,
 } from "../../services/studentClassService";
+import excelService from "../../services/excelService";
 
 interface StudentClassDetailFormProps {
   data: StudentClassResponse;
@@ -22,6 +23,9 @@ const StudentClassDetailForm = ({
   const [isNew, setIsNew] = useState(
     String(data.id).startsWith("new_") ? true : false,
   );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   // Khởi tạo state từ props data
   const [formData, setFormData] = useState<StudentClassResponse>(() => ({
     ...data,
@@ -33,6 +37,36 @@ const StudentClassDetailForm = ({
     subDepartmentName: data.subDepartmentName || "",
     departmentName: data.departmentName || "",
   }));
+
+  const handleDownloadTemplate = async () => {
+    try {
+      await excelService.downloadStudentTemplate();
+      toast.info("Đang tải file mẫu...");
+    } catch (error: unknown) {
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message);
+    }
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const response = await excelService.importStudents(formData.id, file);
+      if (response.status === 200) {
+        toast.success(response.message || "Import sinh viên thành công!");
+        // Reset file input để có thể chọn lại cùng 1 file nếu cần
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message || "Lỗi khi import file");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleChange = (key: keyof StudentClassResponse, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -102,7 +136,40 @@ const StudentClassDetailForm = ({
   return (
     <div className="max-w-4xl mx-auto p-12 bg-white min-h-[600px] font-sans text-slate-900 shadow-sm">
       {/* Nút điều khiển */}
-      <div className="flex justify-end mb-8 no-print">
+      {/* Nút điều khiển */}
+      <div className="flex justify-between items-center mb-8 no-print">
+        {/* Nhóm nút Excel */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleDownloadTemplate}
+            className="flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium border border-green-600 text-green-600 hover:bg-green-50 transition-colors"
+          >
+            <FileDown size={14} /> Tải mẫu
+          </button>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImportExcel}
+            className="hidden"
+            accept=".xlsx, .xls"
+          />
+
+          <button
+            disabled={isUploading || isNew}
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium border transition-colors ${
+              isUploading
+                ? "bg-slate-100 text-slate-400 border-slate-200"
+                : "border-orange-500 text-orange-500 hover:bg-orange-50"
+            } ${isNew ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Upload size={14} />
+            {isUploading ? "Đang xử lý..." : "Import Excel"}
+          </button>
+        </div>
+
+        {/* Nút Lưu/Sửa cũ */}
         <button
           onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
           className={`flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium border transition-colors ${

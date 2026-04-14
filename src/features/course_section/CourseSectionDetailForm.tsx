@@ -9,6 +9,8 @@ import courseSectionService, {
   type CourseSectionUpdateRequest,
 } from "./courseSectionService";
 import CourseGradeOverview from "./CourseGradeOverview";
+import SectionStudentImport from "./SectionStudentImport";
+import SectionGradeImport from "./SectionGradeImport";
 
 interface CourseSectionDetailFormProps {
   data: CourseSectionResponse;
@@ -201,7 +203,20 @@ const CourseSectionDetailForm = ({ data }: CourseSectionDetailFormProps) => {
               Dữ liệu thời gian thực
             </span>
           </div>
+          {/* CHÈN COMPONENT MỚI VÀO ĐÂY */}
+          <section className="mt-10 border-t pt-8">
+            <div className="font-bold text-lg border-l-4 border-blue-600 pl-3 mb-4 text-blue-800">
+              5. Danh sách sinh viên học phần
+            </div>
+            <SectionStudentImport sectionId={formData.id} />
+          </section>
 
+          <section className="mt-10 border-t pt-8">
+            <div className="font-bold text-lg border-l-4 border-blue-600 pl-3 mb-4 text-blue-800">
+              6. Nhập điểm sinh viên
+            </div>
+            <SectionGradeImport sectionId={formData.id} />
+          </section>
           {/* Nhúng component hiển thị điểm đã viết ở bước trước */}
           <div className="ml-0">
             <CourseGradeOverview courseSectionId={formData.id} />

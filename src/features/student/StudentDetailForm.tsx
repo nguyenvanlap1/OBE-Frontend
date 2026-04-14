@@ -10,6 +10,7 @@ import type {
   StudentCreateRequest,
 } from "./studentService";
 import logData from "../../utils/logData";
+import StudentAcademicResult from "./StudentAcademicResult";
 
 interface StudentDetailFormProps {
   data: StudentResponse;
@@ -228,6 +229,15 @@ const StudentDetailForm = ({ data, onSave }: StudentDetailFormProps) => {
 
             <div className="flex items-baseline gap-2">
               <span className="min-w-[200px] text-slate-600">
+                - Mã chương trình đào tạo:
+              </span>
+              <span className="font-medium italic">
+                {formData.educationProgramId?.join(", ") || "---"}
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="min-w-[200px] text-slate-600">
                 - Chương trình đào tạo:
               </span>
               <span className="font-medium italic">
@@ -243,7 +253,46 @@ const StudentDetailForm = ({ data, onSave }: StudentDetailFormProps) => {
                 {formData.departmentName?.join(", ") || "---"}
               </span>
             </div>
+            <div className="flex items-baseline gap-2">
+              <span className="min-w-[200px] text-slate-600">
+                - Thuộc bộ môn:
+              </span>
+              <span className="font-medium italic">
+                {formData.subDepartmentName?.join(", ") || "---"}
+              </span>
+            </div>
           </div>
+        </section>
+
+        {/* 3. Hiển thị trực tiếp kết quả OBE cho tất cả chương trình đào tạo */}
+        <section className="space-y-6 pt-8 border-t-2 border-slate-100">
+          <div className="font-bold text-lg border-l-4 border-green-600 pl-3 mb-6 uppercase tracking-wider text-slate-700">
+            3. Kết quả đánh giá OBE chi tiết
+          </div>
+
+          {formData.educationProgramId.length > 0 ? (
+            <div className="space-y-12">
+              {formData.educationProgramId.map((id) => (
+                <div key={id} className="relative">
+                  {/* Nhãn phân cách nếu có nhiều hơn 1 chương trình */}
+                  {formData.educationProgramId.length > 1 && (
+                    <div className="absolute -top-4 left-4 bg-white px-2 text-xs font-bold text-blue-600">
+                      Chương trình: {id}
+                    </div>
+                  )}
+
+                  <StudentAcademicResult
+                    studentId={formData.id}
+                    programId={id}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-400">
+              Chưa có dữ liệu chương trình đào tạo để hiển thị kết quả.
+            </div>
+          )}
         </section>
       </div>
     </div>
