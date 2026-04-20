@@ -68,6 +68,13 @@ const EducationProgramList = ({
         width: 110,
       },
       {
+        field: "subDepartmentId",
+        headerName: "Mã bộ môn quản lý",
+        filter: "agTextColumnFilter",
+        editable: true,
+        width: 180,
+      },
+      {
         field: "subDepartmentName",
         headerName: "Bộ môn quản lý",
         filter: "agTextColumnFilter",

@@ -242,6 +242,75 @@ const PloAccordion = ({ plo }: { plo: PloSummary }) => {
   );
 };
 
+const CloAccordion = ({
+  clo,
+  course,
+}: {
+  clo: any;
+  course: CourseGradeSummary;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border rounded-lg bg-white overflow-hidden shadow-sm border-l-4 border-l-green-400">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 hover:bg-green-50 transition-colors"
+      >
+        <div className="flex items-center gap-4 text-left">
+          <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shrink-0">
+            {clo.cloCode}
+          </span>
+          <span className="font-medium text-gray-800">{clo.content}</span>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right">
+            <p className="text-[10px] text-gray-400 font-bold uppercase">
+              Điểm CLO
+            </p>
+            <p
+              className={`font-bold ${clo.score >= 5 ? "text-green-600" : "text-red-500"}`}
+            >
+              {clo.score.toFixed(2)}
+            </p>
+          </div>
+          {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="p-4 bg-green-50/30 border-t space-y-3">
+          <p className="text-[10px] font-bold text-gray-400 uppercase ml-4 tracking-widest">
+            Chi tiết điểm từ các thành phần đánh giá:
+          </p>
+          <div className="space-y-2 ml-4">
+            {course.assessmentSummaries
+              .filter((asm) => clo.assessmentIds?.includes(asm.id))
+              .map((asm) => (
+                <div
+                  key={asm.id}
+                  className="flex justify-between items-center bg-white p-2 rounded border border-green-100 shadow-sm"
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {asm.name}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-400">
+                      Trọng số: {(asm.weight * 100).toFixed(0)}%
+                    </span>
+                    <span className="font-bold text-blue-600 text-sm">
+                      {asm.score ?? "-"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CourseCard = ({ course }: { course: CourseGradeSummary }) => {
   const [showDetail, setShowDetail] = useState(false);
 
@@ -335,7 +404,18 @@ const CourseCard = ({ course }: { course: CourseGradeSummary }) => {
               ))}
             </div>
           </div>
-
+          {/* PHẦN MỚI: HIỂN THỊ CLO CHI TIẾT */}
+          <div>
+            <h4 className="flex items-center text-xs font-bold text-green-800 mb-4 border-b pb-1 uppercase tracking-wider">
+              <Target size={14} className="mr-2" /> Chi tiết chuẩn đầu ra học
+              phần (CLO)
+            </h4>
+            <div className="space-y-3">
+              {course.clos.map((clo) => (
+                <CloAccordion key={clo.id} clo={clo} course={course} />
+              ))}
+            </div>
+          </div>
           {/* Chi tiết Assessment (Sử dụng assessmentSummaries đã map trong CLO nếu cần hiển thị theo nhánh) */}
           <div>
             <h4 className="flex items-center text-xs font-bold text-green-800 mb-4 border-b pb-1 uppercase tracking-wider">

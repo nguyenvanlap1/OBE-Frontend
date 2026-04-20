@@ -208,6 +208,34 @@ const EducationProgramDetailForm = ({ data }: Props) => {
               )}
             </div>
 
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-slate-500 uppercase">
+                Mã bộ môn
+              </span>
+              {isEditing ? (
+                <input
+                  value={formData.subDepartmentId}
+                  onChange={(e) =>
+                    handleChange("subDepartmentId", e.target.value)
+                  }
+                  className="border-b-2 border-blue-400 bg-yellow-50 outline-none px-2 py-1"
+                />
+              ) : (
+                <span className="text-slate-700 font-medium">
+                  {formData.subDepartmentId}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-slate-500 uppercase">
+                Thuộc bộ môn:
+              </span>
+              <span className="border-b-2 border-blue-400 bg-yellow-50 px-2 py-1 text-slate-700 font-medium">
+                {formData.subDepartmentName || "Chưa xác định"}
+              </span>
+            </div>
+
             {/* Tín chỉ */}
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-slate-500 uppercase">

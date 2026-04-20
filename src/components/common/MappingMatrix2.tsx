@@ -105,7 +105,7 @@ const MappingMatrix2 = ({
                     />
                   ) : (
                     <span className="font-medium text-blue-600">
-                      {getWeight(row.id, col.id) || "0"}
+                      {getWeight(row.id, col.id) || "-"}
                     </span>
                   )}
                 </td>

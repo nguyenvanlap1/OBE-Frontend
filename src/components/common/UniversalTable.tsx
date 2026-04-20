@@ -104,9 +104,9 @@ const UniversalTable = <T extends { id: number | string }>({
                           : "text-justify"
                       }
                     >
-                      {String(item[key]).normalize("NFC")}
-                      {/* Tự động thêm dấu % nếu là trường weight */}
-                      {String(key).toLowerCase() === "weight" ? "%" : ""}
+                      {String(key).toLowerCase() === "weight"
+                        ? `${(Number(item[key]) * 100).toFixed(0)}%`
+                        : String(item[key]).normalize("NFC")}
                     </div>
                   )}
                 </td>

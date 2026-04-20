@@ -4,7 +4,6 @@ import authService, { type UserMeResponse } from "../../services/authService";
 
 export default function MainLayout({ user }: { user: UserMeResponse }) {
   const navigate = useNavigate();
-
   const handleLogout = async () => {
     await authService.logout();
     navigate("/login");
@@ -28,9 +27,9 @@ export default function MainLayout({ user }: { user: UserMeResponse }) {
                 <p className="text-[12px] font-bold leading-none">
                   {user.fullName}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-1 uppercase font-black">
+                {/* <p className="text-[10px] text-slate-400 mt-1 uppercase font-black">
                   {user.isSystemAccount ? "Admin" : "Giảng viên"}
-                </p>
+                </p> */}
               </div>
               <div className="w-8 h-8 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-[11px]">
                 {user.fullName.split(" ").pop()?.charAt(0)}

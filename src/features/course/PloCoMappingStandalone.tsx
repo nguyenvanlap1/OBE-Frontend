@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Search, RefreshCw, Grid3X3, Plus, AlertCircle } from "lucide-react";
+import { Search, RefreshCw, Plus, X } from "lucide-react";
 import { toast } from "react-toastify";
-import ploCoMappingService, {
-  type EducationProgramSummary,
-  type PloCoMappingResponse,
-} from "../../services/ploCoMappingService";
-import type { AxiosError } from "axios";
+import type {
+  EducationProgramSummary,
+  PloCoMappingResponse,
+} from "../education_program/ploCoMappingService";
+import ploCoMappingService from "../education_program/ploCoMappingService";
 import type { ApiResponse } from "../../services/api";
+import type { AxiosError } from "axios";
 
 const PloCoMappingStandalone = ({
   courseId,
@@ -20,10 +21,10 @@ const PloCoMappingStandalone = ({
   const [programId, setProgramId] = useState("");
   const [mappings, setMappings] = useState<PloCoMappingResponse[]>([]);
   const [programName, setProgramName] = useState("");
+  // State mới cho việc xóa nhanh
+  const [selectedMappingToDelete, setSelectedMappingToDelete] = useState("");
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  // State mới cho danh sách gợi ý
   const [suggestedPrograms, setSuggestedPrograms] = useState<
     EducationProgramSummary[]
   >([]);
@@ -32,37 +33,81 @@ const PloCoMappingStandalone = ({
   const [customCos, setCustomCos] = useState<string[]>([]);
   const [newCode, setNewCode] = useState({ plo: "", co: "" });
 
+  // const allPloCodes = Array.from(
+  //   new Set([...mappings.map((m) => m.ploCode), ...customPlos]),
+  // ).sort();
+  // const allCoCodes = Array.from(
+  //   new Set([...mappings.map((m) => m.coCode), ...customCos]),
+  // ).sort();
+
+  // Hàm bổ trợ để trích xuất số từ chuỗi (ví dụ: "PLO10" -> 10)
+  const naturalSort = (a: string, b: string) => {
+    return a.localeCompare(b, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+  };
+
   const allPloCodes = Array.from(
     new Set([...mappings.map((m) => m.ploCode), ...customPlos]),
-  ).sort();
+  ).sort(naturalSort); // Sử dụng naturalSort thay vì sort() mặc định
+
   const allCoCodes = Array.from(
     new Set([...mappings.map((m) => m.coCode), ...customCos]),
-  ).sort();
+  ).sort(naturalSort); // Sử dụng naturalSort để CO1, CO2... được chuẩn
 
   const handleFetch = async () => {
-    if (!programId) {
-      toast.warn("Nhập Mã CTĐT");
-      return;
-    }
+    if (!programId) return toast.warn("Nhập Mã CTĐT");
     setLoading(true);
     try {
       const response = await ploCoMappingService.getMappings(
         programId,
         courseId,
       );
-      setMappings(response.data.mappings || []);
+      if (!response?.data?.mappings || response.data.mappings.length === 0) {
+        toast.info("Không có dữ liệu mapping!");
+        setMappings([]);
+        setProgramName(response?.data?.educationProgramName || "");
+        return;
+      }
+      setMappings(response.data.mappings);
       setProgramName(response.data.educationProgramName);
       setCustomPlos([]);
       setCustomCos([]);
-      toast.success("Tải dữ liệu thành công");
-    } catch (error) {
-      setMappings([]);
+      toast("Đã tải dữ liệu thành công");
+    } catch (error: unknown) {
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // 1. Tự động lấy danh sách CTĐT gợi ý khi component load
+  const handleQuickDelete = async () => {
+    if (!selectedMappingToDelete) return;
+
+    const [ploCode, coCode] = selectedMappingToDelete.split("|");
+    setLoading(true);
+    try {
+      await ploCoMappingService.removeMapping(
+        programId,
+        courseId,
+        ploCode,
+        coCode,
+      );
+      setMappings((prev) =>
+        prev.filter((m) => !(m.ploCode === ploCode && m.coCode === coCode)),
+      );
+      setSelectedMappingToDelete("");
+      toast.success(`Đã xóa mapping ${ploCode} - ${coCode}`);
+    } catch (error: unknown) {
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
@@ -70,18 +115,15 @@ const PloCoMappingStandalone = ({
           courseId,
           courseVersion,
         );
-        if (res.data) {
-          setSuggestedPrograms(res.data.educationProgramSummaries);
-        }
+        if (res.data) setSuggestedPrograms(res.data.educationProgramSummaries);
       } catch (error: unknown) {
-        const err = error as AxiosError<ApiResponse<void>>;
+        const err = error as AxiosError<ApiResponse<null>>;
         console.error(err.message);
       }
     };
     fetchSuggestions();
   }, [courseId, courseVersion]);
 
-  // Hàm xử lý cập nhật trọng số
   const handleWeightChange = async (
     ploCode: string,
     coCode: string,
@@ -89,7 +131,6 @@ const PloCoMappingStandalone = ({
   ) => {
     const weight = parseFloat(weightStr);
 
-    // Nếu nhập trống hoặc 0 -> Xóa ánh xạ (tùy nghiệp vụ, ở đây mình coi 0 hoặc NaN là xóa)
     if (isNaN(weight) || weight <= 0) {
       try {
         await ploCoMappingService.removeMapping(
@@ -101,8 +142,10 @@ const PloCoMappingStandalone = ({
         setMappings((prev) =>
           prev.filter((m) => !(m.ploCode === ploCode && m.coCode === coCode)),
         );
-      } catch (e) {
-        /* Lỗi có thể do chưa tồn tại mapping để xóa */
+        toast.success(`Đã xóa mapping ${ploCode} - ${coCode}`);
+      } catch (error: unknown) {
+        const err = error as AxiosError<ApiResponse<null>>;
+        console.error(err.message);
       }
       return;
     }
@@ -114,100 +157,98 @@ const PloCoMappingStandalone = ({
         weight,
       });
       if (res.data) {
-        setMappings((prev) => {
-          const filtered = prev.filter(
+        setMappings((prev) => [
+          ...prev.filter(
             (m) => !(m.ploCode === ploCode && m.coCode === coCode),
-          );
-          return [...filtered, res.data];
-        });
+          ),
+          res.data,
+        ]);
       }
+      toast.success(`Đã cập nhật mapping ${ploCode} - ${coCode}`);
     } catch (error: unknown) {
       const err = error as AxiosError<ApiResponse<null>>;
-      toast.error(err.message);
+      console.error(err.message || lỗi);
     }
   };
 
+  // Hàm xóa "mềm" các mã tự thêm
+  const removePloRow = (code: string) =>
+    setCustomPlos((prev) => prev.filter((c) => c !== code));
+  const removeCoCol = (code: string) =>
+    setCustomCos((prev) => prev.filter((c) => c !== code));
+
   return (
-    <div className="mt-8 overflow-x-auto">
-      <h3 className="font-bold mb-4 uppercase text-slate-700 border-l-4 border-blue-600 pl-3">
-        {title}
-      </h3>
-      <div className="bg-white border rounded-lg shadow-sm">
-        {/* Header Tìm kiếm */}
-        <div className="p-4 bg-slate-50 border-b flex items-end gap-3">
-          <div className="flex-1">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-              Mã CTĐT
-            </label>
+    <div className="mt-6">
+      {/* 1. HEADER: Tiêu đề và Nút chuyển đổi chế độ */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-slate-700 uppercase border-l-4 border-blue-500 pl-3">
+          {title}
+        </h3>
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className={`px-4 py-1.5 rounded text-xs font-bold border transition-colors ${
+            isEditing
+              ? "bg-slate-800 text-white"
+              : "bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          {isEditing ? "HOÀN TẤT" : "CHỈNH SỬA MA TRẬN"}
+        </button>
+      </div>
+
+      <div className="bg-white border rounded-md shadow-sm overflow-hidden">
+        {/* 2. SEARCH BAR: Truy xuất dữ liệu và Hiển thị tên chương trình */}
+        <div className="p-3 bg-slate-50 border-b space-y-3">
+          <div className="flex items-center gap-3">
             <input
-              type="text"
-              list="program-suggestions" // Kết nối với ID của datalist
-              className="w-full border rounded px-3 py-1.5 text-sm outline-none focus:border-blue-500"
+              list="progs"
+              className="flex-1 border rounded px-3 py-1.5 text-sm outline-none focus:ring-1 ring-blue-500"
               value={programId}
               onChange={(e) => setProgramId(e.target.value)}
-              placeholder="Nhập hoặc chọn mã CTĐT..."
+              placeholder="Mã Chương trình đào tạo..."
             />
-            <datalist id="program-suggestions">
-              {suggestedPrograms.map((prog) => (
-                <option
-                  key={prog.educationProgramId}
-                  value={prog.educationProgramId}
-                >
-                  {prog.educationProgramName}
+            <datalist id="progs">
+              {suggestedPrograms.map((p) => (
+                <option key={p.educationProgramId} value={p.educationProgramId}>
+                  {p.educationProgramName}
                 </option>
               ))}
             </datalist>
-          </div>
-          {/* KHU VỰC HIỂN THỊ TÊN CHƯƠNG TRÌNH */}
-          <div className="flex-[1] flex flex-col justify-end h-full">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-              Tên chương trình đào tạo
-            </label>
-            <div className="px-3 py-1.5 text-sm font-semibold text-blue-800 bg-blue-50 border border-blue-100 rounded min-h-[38px] flex items-center">
-              {programName || (
-                <span className="text-slate-300 font-normal italic">
-                  Chưa xác định
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={handleFetch}
-            className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm flex items-center gap-2"
-          >
-            {loading ? (
-              <RefreshCw className="animate-spin" size={14} />
-            ) : (
-              <Search size={14} />
-            )}{" "}
-            Truy xuất
-          </button>
-        </div>
 
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xs font-bold text-slate-600 uppercase flex items-center gap-2">
-              <Grid3X3 size={14} /> Ma trận trọng số PLO - CO
-            </h3>
             <button
-              onClick={() => setIsEditing(!isEditing)}
-              className={`text-[11px] px-3 py-1 rounded font-bold border transition-all ${
-                isEditing
-                  ? "bg-orange-500 text-white border-orange-500"
-                  : "bg-white text-slate-500 border-slate-300"
-              }`}
+              onClick={handleFetch}
+              className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm flex items-center gap-2 hover:bg-blue-700 transition-colors"
             >
-              {isEditing ? "XONG" : "CHỈNH SỬA KHUNG & TRỌNG SỐ"}
+              {loading ? (
+                <RefreshCw className="animate-spin" size={14} />
+              ) : (
+                <Search size={14} />
+              )}
+              Truy xuất
             </button>
           </div>
 
+          {programName && (
+            <div className="text-sm font-semibold text-blue-700 bg-blue-50 px-3 py-2 rounded border border-blue-100 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+              Chương trình: {programName}
+            </div>
+          )}
+        </div>
+
+        <div className="p-4">
+          {/* 3. EDITING TOOLS: Thêm PLO/CO và Xóa nhanh (Chỉ hiện khi isEditing = true) */}
           {isEditing && (
-            <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-100 flex flex-wrap gap-4">
-              <div className="flex gap-2">
+            <div className="mb-4 p-3 bg-blue-50/30 rounded-md border border-blue-100 flex flex-wrap gap-6 items-center">
+              {/* Thêm PLO */}
+              <div className="flex gap-1 items-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">
+                  Thêm:
+                </span>
                 <input
                   type="text"
-                  placeholder="Thêm mã PLO..."
-                  className="border rounded px-2 py-1 text-xs outline-none"
+                  placeholder="+ PLO"
+                  className="border rounded px-2 py-1 text-xs w-20"
                   value={newCode.plo}
                   onChange={(e) =>
                     setNewCode({
@@ -215,6 +256,13 @@ const PloCoMappingStandalone = ({
                       plo: e.target.value.toUpperCase(),
                     })
                   }
+                  // Thêm xử lý Enter ở đây
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newCode.plo) {
+                      setCustomPlos([...customPlos, newCode.plo]);
+                      setNewCode({ ...newCode, plo: "" });
+                    }
+                  }}
                 />
                 <button
                   onClick={() => {
@@ -223,20 +271,29 @@ const PloCoMappingStandalone = ({
                       setNewCode({ ...newCode, plo: "" });
                     }
                   }}
-                  className="bg-orange-500 text-white p-1 rounded"
+                  className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  <Plus size={16} />
+                  <Plus size={14} />
                 </button>
               </div>
-              <div className="flex gap-2 border-l border-orange-200 pl-4">
+
+              {/* Thêm CO */}
+              <div className="flex gap-1 items-center border-l pl-4 border-slate-200">
                 <input
                   type="text"
-                  placeholder="Thêm mã CO..."
-                  className="border rounded px-2 py-1 text-xs outline-none"
+                  placeholder="+ CO"
+                  className="border rounded px-2 py-1 text-xs w-20"
                   value={newCode.co}
                   onChange={(e) =>
                     setNewCode({ ...newCode, co: e.target.value.toUpperCase() })
                   }
+                  // Thêm xử lý Enter ở đây
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newCode.co) {
+                      setCustomCos([...customCos, newCode.co]);
+                      setNewCode({ ...newCode, co: "" });
+                    }
+                  }}
                 />
                 <button
                   onClick={() => {
@@ -245,86 +302,134 @@ const PloCoMappingStandalone = ({
                       setNewCode({ ...newCode, co: "" });
                     }
                   }}
-                  className="bg-orange-500 text-white p-1 rounded"
+                  className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  <Plus size={16} />
+                  <Plus size={14} />
+                </button>
+              </div>
+
+              {/* Xóa nhanh Mapping */}
+              <div className="flex gap-1 border-l pl-4 border-slate-200 items-center">
+                <span className="text-[10px] font-bold text-red-500 uppercase mr-1">
+                  Xóa cặp:
+                </span>
+                <select
+                  className="border rounded px-2 py-1 text-xs w-40 bg-white outline-none focus:ring-1 ring-red-400"
+                  value={selectedMappingToDelete}
+                  onChange={(e) => setSelectedMappingToDelete(e.target.value)}
+                >
+                  <option value="">-- Chọn để xóa --</option>
+                  {mappings.map((m) => (
+                    <option
+                      key={`${m.ploCode}-${m.coCode}`}
+                      value={`${m.ploCode}|${m.coCode}`}
+                    >
+                      {m.ploCode} - {m.coCode} (w: {m.weight})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleQuickDelete}
+                  disabled={!selectedMappingToDelete || loading}
+                  className="p-1 bg-red-500 text-white rounded disabled:bg-slate-300 hover:bg-red-600 transition-colors"
+                  title="Xóa mapping đã chọn"
+                >
+                  <X size={14} />
                 </button>
               </div>
             </div>
           )}
-
-          {allPloCodes.length > 0 || allCoCodes.length > 0 ? (
-            <div className="overflow-x-auto border rounded">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border-b border-r bg-slate-50 p-2 text-[11px] text-slate-400">
-                      PLO \ CO
-                    </th>
-                    {allCoCodes.map((co) => (
-                      <th
-                        key={co}
-                        className="border-b bg-slate-50 p-2 text-[11px] font-bold text-center text-slate-600"
-                      >
-                        {co}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+          {/* 4. DATA TABLE: Ma trận Mapping (CO ngang, PLO dọc) */}
+          <div className="overflow-x-auto border rounded bg-white">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-100">
+                  {/* Góc trên bên trái: Đảo nhãn thành CO \ PLO */}
+                  <th className="p-2 border-b border-r text-slate-500 font-medium w-20">
+                    CO \ PLO
+                  </th>
+                  {/* Render PLO theo chiều ngang */}
                   {allPloCodes.map((plo) => (
-                    <tr key={plo}>
-                      <td className="border-r border-b p-2 text-[11px] font-bold bg-slate-50/50 text-center uppercase text-slate-700">
-                        {plo}
-                      </td>
-                      {allCoCodes.map((co) => {
-                        const mapping = mappings.find(
-                          (m) => m.ploCode === plo && m.coCode === co,
-                        );
-                        return (
-                          <td
-                            key={`${plo}-${co}`}
-                            className="border-b border-r p-1 text-center min-w-[60px]"
-                          >
-                            <input
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              max="1"
-                              disabled={!isEditing}
-                              defaultValue={mapping?.weight || ""}
-                              onBlur={(e) =>
-                                handleWeightChange(plo, co, e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter")
-                                  handleWeightChange(
-                                    plo,
-                                    co,
-                                    (e.target as HTMLInputElement).value,
-                                  );
-                              }}
-                              placeholder="0.0"
-                              className={`w-full text-center text-xs py-1 rounded border outline-none transition-all ${
-                                mapping
-                                  ? "bg-blue-50 border-blue-200 font-bold text-blue-700"
-                                  : "bg-transparent border-transparent hover:border-slate-200"
-                              } ${!isEditing && "cursor-default"}`}
-                            />
-                          </td>
-                        );
-                      })}
-                    </tr>
+                    <th
+                      key={plo}
+                      className="p-2 border-b border-r font-bold text-center group relative min-w-[60px]"
+                    >
+                      {plo}
+                      {isEditing && (
+                        <button
+                          onClick={() => removePloRow(plo)}
+                          className="absolute -top-1 -right-1 hidden group-hover:flex bg-red-500 text-white rounded-full p-0.5 shadow-sm"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="py-16 flex flex-col items-center justify-center text-slate-300 bg-slate-50/50 rounded border-2 border-dashed">
-              <AlertCircle size={32} className="mb-2 opacity-20" />
-              <p className="text-xs font-medium">
-                Bật chỉnh sửa để thiết lập ma trận.
-              </p>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Duyệt qua danh sách CO để tạo từng hàng */}
+                {allCoCodes.map((co) => (
+                  <tr
+                    key={co}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
+                    {/* Cột đầu tiên hiển thị mã CO */}
+                    <td className="p-2 border-b border-r font-bold text-center bg-slate-50 relative group">
+                      {co}
+                      {isEditing && (
+                        <button
+                          onClick={() => removeCoCol(co)}
+                          className="absolute top-1 left-1 hidden group-hover:flex bg-red-500 text-white rounded-full p-0.5 shadow-sm"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </td>
+                    {/* Duyệt qua PLO để đổ dữ liệu vào từng ô (cell) */}
+                    {allPloCodes.map((plo) => {
+                      const mapping = mappings.find(
+                        (m) => m.ploCode === plo && m.coCode === co,
+                      );
+                      return (
+                        <td
+                          key={`${co}-${plo}`}
+                          className="p-1 border-b border-r"
+                        >
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="1"
+                            disabled={!isEditing}
+                            // Sử dụng key để ép input re-render khi mapping thay đổi
+                            key={mapping?.weight}
+                            defaultValue={mapping?.weight || ""}
+                            onBlur={(e) =>
+                              handleWeightChange(plo, co, e.target.value)
+                            }
+                            placeholder="-"
+                            className={`w-full text-center py-1.5 rounded outline-none transition-all ${
+                              mapping
+                                ? "font-bold text-blue-600 bg-blue-50"
+                                : "bg-transparent text-slate-400"
+                            } ${
+                              isEditing
+                                ? "border border-transparent hover:border-slate-300 focus:border-blue-400 focus:bg-white focus:shadow-inner"
+                                : "cursor-default"
+                            }`}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!loading && mappings.length === 0 && !programId && (
+            <div className="text-center py-10 text-slate-400 text-sm">
+              Vui lòng nhập Mã CTĐT để truy xuất ma trận mapping.
             </div>
           )}
         </div>

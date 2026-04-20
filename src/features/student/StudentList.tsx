@@ -36,7 +36,7 @@ const StudentList = ({ onViewDetail, onCreate }: StudentListProps) => {
       {
         field: "id",
         headerName: "MSSV",
-        flex: 0.8,
+        flex: 0.5,
         filter: "agTextColumnFilter",
         pinned: "left",
       },

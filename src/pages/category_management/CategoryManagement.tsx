@@ -36,7 +36,7 @@ import DepartmentDetailForm from "../../features/department/DepartmentDetailForm
 import SubDepartmentDetailForm from "../../features/sub_department/SubDepartmentDetailForm";
 import CourseVersionWorkflowDetail from "../../features/camunda_task/CourseVersionWorkflowDetail";
 import WorkflowInvolvedList from "../../features/camunda_task/WorkflowInvolvedList";
-import StatisticsPage from "../statistics/StatisticsPage";
+import StatisticsPage from "../../features/statistics/StatisticsPage";
 
 const initialJson: IJsonModel = {
   global: {
@@ -86,6 +86,26 @@ const App = () => {
   const [layoutModel] = useState(Model.fromJson(initialJson));
   const [, setTick] = useState(0);
   const forceUpdate = () => setTick((t) => t + 1);
+
+  const closeAllTabsInGroup = (tabsetId: string) => {
+    const tabset = layoutModel.getNodeById(tabsetId);
+
+    if (tabset && tabset.getChildren()) {
+      const children = [...tabset.getChildren()];
+
+      children.forEach((node) => {
+        // 1. Kiểm tra nếu node là một Tab (thay vì tabset con hoặc row)
+        // 2. Ép kiểu về TabNode để truy cập isEnableClose()
+        if (node instanceof TabNode) {
+          if (node.isEnableClose()) {
+            layoutModel.doAction(Actions.deleteTab(node.getId()));
+          }
+        }
+      });
+
+      forceUpdate();
+    }
+  };
 
   // Cập nhật: Hàm xử lý khi click menu để mở trang tương ứng
   const onAddPage = (id: string, name: string) => {
@@ -534,7 +554,30 @@ const App = () => {
 
   return (
     <div className="w-full h-full relative border-t border-gray-200">
-      <Layout model={layoutModel} factory={factory} />
+      <Layout
+        model={layoutModel}
+        factory={factory}
+        onRenderTabSet={(node, renderValues) => {
+          // Chỉ hiện nút này trên Tabset cụ thể, ví dụ các tab chi tiết
+          if (node.getId().startsWith("detail_panel_right")) {
+            renderValues.buttons.push(
+              <button
+                key="close-all-btn"
+                title="Đóng tất cả tab trong nhóm này"
+                style={{
+                  marginLeft: "5px",
+                  cursor: "pointer",
+                  border: "none",
+                  background: "none",
+                }}
+                onClick={() => closeAllTabsInGroup(node.getId())}
+              >
+                ✕
+              </button>,
+            );
+          }
+        }}
+      />
     </div>
   );
 };

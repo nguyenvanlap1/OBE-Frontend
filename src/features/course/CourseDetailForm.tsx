@@ -317,26 +317,29 @@ const CourseDetailForm = ({ data, onSave }: CourseDetailFormProps) => {
       {/* 8. Ma trận mapping Assessment - CLO */}
       <MappingMatrix3
         title="9. Ma trận mapping Assessment - CLO"
-        // Ở đây mình lấy cả Code và Name để hiển thị cho rõ
-        rows={formData.clos.map((p) => ({
+        // 1. Đưa Assessment xuống làm Hàng (rows)
+        rows={formData.assessments.map((p) => ({
+          id: p.id,
+          displayLabel: `${p.assessmentCode}: ${p.name}`,
+        }))}
+        // 2. Đưa CLO lên làm Cột (cols)
+        cols={formData.clos.map((p) => ({
           id: p.id,
           displayLabel: p.cloCode,
         }))}
-        cols={formData.assessments.map((p) => ({
-          id: p.id,
-          displayLabel: `${p.assessmentCode}: ${p.name}`, // Hiển thị "A1: Chuyên cần"
-        }))}
+        // 3. Đảo ngược rowId và colId trong mappings
         mappings={formData.assessmentCloMappings.map((m) => ({
-          rowId: m.cloId,
-          colId: m.assessmentId,
+          rowId: m.assessmentId, // Bây giờ hàng là Assessment
+          colId: m.cloId, // Bây giờ cột là CLO
           weight: m.weight,
         }))}
-        labels={{ row: "CLO", col: "Bài đánh giá" }}
+        labels={{ row: "Bài đánh giá", col: "CLO" }}
         isEditing={isEditing}
         onMappingChange={(newMappings) => {
+          // 4. Khi lưu, phải đảo ngược ngược lại để đúng định dạng API (cloId, assessmentId)
           const apiFormat = newMappings.map((m) => ({
-            cloId: m.rowId as any,
-            assessmentId: m.colId as any,
+            cloId: m.colId as any, // colId lúc này chính là cloId
+            assessmentId: m.rowId as any, // rowId lúc này chính là assessmentId
             weight: m.weight,
             cloCode: "",
             assessmentCode: "",

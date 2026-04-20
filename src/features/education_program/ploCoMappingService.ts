@@ -1,5 +1,5 @@
-import api from "./api";
-import type { ApiResponse } from "./api";
+import api from "../../services/api";
+import type { ApiResponse } from "../../services/api";
 
 // --- Interfaces dựa trên Java DTOs ---
 

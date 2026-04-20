@@ -14,6 +14,7 @@ export interface AssessmentResult {
 }
 
 export interface StudentAssessmentResult {
+  enrollmentId: number;
   studentId: string;
   assessmentCode: number;
   assessmentName: string;
@@ -21,12 +22,14 @@ export interface StudentAssessmentResult {
 }
 
 export interface StudentCloResult {
+  enrollmentId: number;
   studentId: string;
   cloCode: string;
   cloScore: number;
 }
 
 export interface StudentCoResult {
+  enrollmentId: number;
   studentId: string;
   coCode: string;
   coScore: number;

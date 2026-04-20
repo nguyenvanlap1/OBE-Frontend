@@ -286,7 +286,7 @@ export const InfiniteGrid = <
                 <span className="hidden sm:inline ml-1">Cột</span>
               </button>
 
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 shadow-xl rounded-md z-50 p-2 hidden group-hover:block animate-in fade-in zoom-in duration-150">
+              <div className="absolute right-0 top-full mt-0 w-48 bg-white border border-gray-200 shadow-xl rounded-md z-50 p-2 hidden group-hover:block animate-in fade-in zoom-in duration-150">
                 <div className="text-[10px] font-bold text-gray-400 uppercase mb-2 px-1 border-b pb-1">
                   Tùy chỉnh cột
                 </div>
@@ -362,6 +362,7 @@ export const InfiniteGrid = <
               paginationPageSize={pageSize}
               suppressCellFocus={false}
               enableCellTextSelection={true}
+              paginationPageSizeSelector={[pageSize, 20, 50, 100]}
             />
           </div>
         </div>
