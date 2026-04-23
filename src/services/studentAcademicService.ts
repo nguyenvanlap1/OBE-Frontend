@@ -152,6 +152,18 @@ const studentAcademicService = {
 
     return response.data;
   },
+
+  /**
+   * Gọi API làm mới dữ liệu cho toàn bộ sinh viên trong một lớp
+   */
+  refreshClassResult: async (classId: string): Promise<ApiResponse<void>> => {
+    // API này không trả về StudentAcademicResultResponse nên không cần enrichData
+    const response = await api.post<ApiResponse<void>>(
+      `/academic-results/class/${classId}/refresh`,
+    );
+
+    return response.data;
+  },
 };
 
 export default studentAcademicService;

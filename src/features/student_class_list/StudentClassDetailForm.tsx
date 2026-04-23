@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Save, Edit2, Upload, FileDown } from "lucide-react";
+import { Save, Edit2, Upload, FileDown, RefreshCw } from "lucide-react";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "../../services/api";
@@ -9,6 +9,7 @@ import studentClassService, {
   type StudentClassUpdateRequest,
 } from "../../services/studentClassService";
 import excelService from "../../services/excelService";
+import studentAcademicService from "../../services/studentAcademicService";
 
 interface StudentClassDetailFormProps {
   data: StudentClassResponse;
@@ -26,6 +27,7 @@ const StudentClassDetailForm = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   // Khởi tạo state từ props data
   const [formData, setFormData] = useState<StudentClassResponse>(() => ({
     ...data,
@@ -107,6 +109,22 @@ const StudentClassDetailForm = ({
     }
   };
 
+  const handleRefreshClassAcademic = async () => {
+    setIsRefreshing(true);
+    try {
+      toast.info(
+        `Đang tính toán lại dữ liệu OBE cho toàn bộ lớp ${formData.id}...`,
+      );
+      await studentAcademicService.refreshClassResult(formData.id);
+      toast.success("Đã hoàn thành cập nhật cache cho cả lớp!");
+    } catch (error) {
+      const err = error as AxiosError<ApiResponse<null>>;
+      toast.error(err.message || "Lỗi khi làm mới dữ liệu lớp");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   // Helper render input đồng nhất style với CourseDetail
   const renderField = (
     label: string,
@@ -166,6 +184,23 @@ const StudentClassDetailForm = ({
           >
             <Upload size={14} />
             {isUploading ? "Đang xử lý..." : "Import Excel"}
+          </button>
+
+          {/* NÚT MỚI THÊM VÀO ĐÂY */}
+          <button
+            disabled={isRefreshing || isNew}
+            onClick={handleRefreshClassAcademic}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium border transition-colors ${
+              isRefreshing
+                ? "bg-slate-100 text-slate-400 border-slate-200"
+                : "border-purple-600 text-purple-600 hover:bg-purple-50"
+            } ${isNew ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <RefreshCw
+              size={14}
+              className={isRefreshing ? "animate-spin" : ""}
+            />
+            {isRefreshing ? "Đang cập nhật..." : "Làm mới OBE lớp"}
           </button>
         </div>
 

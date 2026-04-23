@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import {
   BarChart,
@@ -25,7 +26,7 @@ import {
 } from "./statisticsService";
 import StudentDetailTables from "./StudentDetailTables";
 
-const OBEAnalytics: React.FC = () => {
+const CourseOBEAnalytics: React.FC = () => {
   // 1. State cho Form Input
   const [request, setRequest] = useState<CourseClassStatisticsRequest>({
     courseId: "",
@@ -47,6 +48,16 @@ const OBEAnalytics: React.FC = () => {
     clo: true,
     co: true,
   });
+
+  const sortCodes = (data: any[], key: string) => {
+    if (!data) return [];
+    return [...data].sort((a, b) => {
+      // Tách phần số từ chuỗi (VD: CLO5 -> 5)
+      const numA = parseInt(a[key].replace(/\D/g, "")) || 0;
+      const numB = parseInt(b[key].replace(/\D/g, "")) || 0;
+      return numA - numB;
+    });
+  };
 
   // 2. Xử lý logic Form
   const handleCalculate = async () => {
@@ -355,13 +366,13 @@ const OBEAnalytics: React.FC = () => {
             <ResultTable
               title="CLO RESULTS"
               bgColor="bg-emerald-600"
-              data={data.cloResults}
+              data={sortCodes(data.cloResults, "cloCode")}
               codeKey="cloCode"
             />
             <ResultTable
               title="CO RESULTS"
               bgColor="bg-orange-600"
-              data={data.coResults}
+              data={sortCodes(data.coResults, "coCode")}
               codeKey="coCode"
             />
           </div>
@@ -398,7 +409,8 @@ const OBEAnalytics: React.FC = () => {
                 <Send size={20} className="rotate-90" /> Phổ điểm theo CLO
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.cloResults.map((clo) => (
+                {/* Sắp xếp danh sách CLO trước khi map */}
+                {sortCodes(data.cloResults, "cloCode").map((clo) => (
                   <ChartBox
                     key={clo.cloCode}
                     title={`CLO: ${clo.cloCode}`}
@@ -420,7 +432,8 @@ const OBEAnalytics: React.FC = () => {
                 <Send size={20} className="rotate-90" /> Phổ điểm theo CO
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.coResults.map((co) => (
+                {/* Sắp xếp danh sách CO trước khi map */}
+                {sortCodes(data.coResults, "coCode").map((co) => (
                   <ChartBox
                     key={co.coCode}
                     title={`CO: ${co.coCode}`}
@@ -534,4 +547,4 @@ const ChartBox = ({ title, data, color }: any) => (
   </div>
 );
 
-export default OBEAnalytics;
+export default CourseOBEAnalytics;

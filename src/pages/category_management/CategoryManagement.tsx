@@ -36,7 +36,7 @@ import DepartmentDetailForm from "../../features/department/DepartmentDetailForm
 import SubDepartmentDetailForm from "../../features/sub_department/SubDepartmentDetailForm";
 import CourseVersionWorkflowDetail from "../../features/camunda_task/CourseVersionWorkflowDetail";
 import WorkflowInvolvedList from "../../features/camunda_task/WorkflowInvolvedList";
-import StatisticsPage from "../../features/statistics/StatisticsPage";
+import OBEDashboard from "../../features/statistics/OBEDashboard";
 
 const initialJson: IJsonModel = {
   global: {
@@ -541,7 +541,7 @@ const App = () => {
         return <CourseVersionWorkflowDetail data={config.data} />;
 
       case "statistics_obe":
-        return <StatisticsPage />;
+        return <OBEDashboard />;
 
       default:
         return (
